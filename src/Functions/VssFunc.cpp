@@ -9,3 +9,7 @@ static char THIS_FILE[]=__FILE__;
 #endif
 
 
+void vss::get_all()
+{
+
+}

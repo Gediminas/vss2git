@@ -5,7 +5,7 @@
 
 namespace vss
 {
-
+	void get_all();
 };
 //namespace vss
 

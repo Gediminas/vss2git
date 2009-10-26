@@ -126,18 +126,10 @@ SOURCE=.\Functions\VssFunc.cpp
 SOURCE=.\Functions\VssFunc.h
 # End Source File
 # End Group
-# Begin Group "Main"
-
-# PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\Main\vss2git.cpp
+SOURCE=.\main.cpp
 # End Source File
-# Begin Source File
-
-SOURCE=.\Main\vss2git.h
-# End Source File
-# End Group
 # Begin Source File
 
 SOURCE=.\StdAfx.cpp
