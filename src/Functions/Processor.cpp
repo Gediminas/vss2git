@@ -1,8 +1,10 @@
 #include "StdAfx.h"
 #include "Processor.h"
 
+#include "Data.h"
 #include "VssFunc.h"
 #include "GitFunc.h"
+
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -11,9 +13,18 @@ static char THIS_FILE[]=__FILE__;
 #endif
 
 
-void processor::Collect()
+static void Collect(SDataVect &vect)
 {
 
 };
+
+
+void processor::Run()
+{
+	SDataVect vect;
+	Collect(vect);
+
+}
+
 
 

@@ -12,13 +12,11 @@ static char THIS_FILE[]=__FILE__;
 template<typename T>
 class TDeletor 
 {
-// Operations
 public:
-//	template <typename T>
-//	void operator()(const T *ptr)
-//	{
-//		delete ptr;
-//	}
+	void operator()(const T *ptr)
+	{
+		delete ptr;
+	}
 };
 
 
@@ -30,10 +28,7 @@ SDataVect::SDataVect()
 
 SDataVect::~SDataVect()
 {
-//	TDeletor<SData> del;
-//	std::for_each(begin(), end(), del);
-
-	SData *pData = new SData;
-	delete pData;
+	TDeletor<SData> del;
+	std::for_each(begin(), end(), del);
 }
 

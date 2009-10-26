@@ -5,7 +5,7 @@
 
 namespace processor
 {
-	void Collect();
+	void Run();
 };
 //namespace processor
 

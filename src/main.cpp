@@ -15,10 +15,10 @@ CWinApp theApp;
 
 int _tmain(int argc, TCHAR* argv[], TCHAR* envp[])
 {
-	printf("Press any key to start!\n");
-	getchar();
+	//printf("Press any key to start!\n");
+	//getchar();
 
-	processor::Collect();
+	processor::Run();
 
 	printf("Done!\n");
 	getchar();

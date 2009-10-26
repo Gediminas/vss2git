@@ -30,3 +30,4 @@
 *.idx
 *.scc
 vss*.pdb
+vc*.pdb
