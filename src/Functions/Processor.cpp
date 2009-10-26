@@ -59,16 +59,16 @@ static void Collect(SDataVect &vect)
 
 		if (-1 != sLine.Find("$/"))
 		{
-			system(CString("ECHO FOLDER ") + sLine +" >> " + sLogFile);
+			system(CString("ECHO ADD FOLDER ") + sLine +" >> " + sLogFile);
 		}
 		else if (-1 != sLine.Find(".cpp") ||
 				(-1 != sLine.Find(".h"))   )
 		{
-			system(CString("ECHO ADD ") + sLine +" >> " + sLogFile);
+			system(CString("ECHO ADD FILE ") + sLine +" >> " + sLogFile);
 		}
 		else
 		{
-			system(CString("ECHO skip ") + sLine +" >> " + sLogFile);
+			//system(CString("ECHO skip ") + sLine +" >> " + sLogFile);
 		}
 	}
 
