@@ -34,9 +34,6 @@ static void Initialize()
 
 static void AddFile(LPCTSTR szFilePath, CStdioFile &output_file)
 {
-	output_file.WriteString(szFilePath);
-	output_file.WriteString("\n");
-
 	vss::list_file_versions(szFilePath, paths::szDump);
 
 	CStdioFile fileDump;
@@ -49,7 +46,9 @@ static void AddFile(LPCTSTR szFilePath, CStdioFile &output_file)
 		exit(1);
 	}
 
-	CString sLine;
+	CString sLine, sToken;
+	int nToken;
+	int nVersion = INT_MAX;
 
 	while (fileDump.ReadString(sLine))
 	{
@@ -58,8 +57,117 @@ static void AddFile(LPCTSTR szFilePath, CStdioFile &output_file)
 			continue;
 		}
 
+		
+		if (0 == sLine.Find("*****************  Version "))
+		{
+			sToken = sLine.Mid(27, 4);
+			sToken.TrimRight();
+
+			nToken = atoi(sToken);
+
+			ASSERT(0 < nToken);
+			ASSERT(nToken < nVersion);
+
+			nVersion = nToken;
+
+			output_file.WriteString("**********\n");
+
+			output_file.WriteString("FILE\n");
+			output_file.WriteString(szFilePath);
+			output_file.WriteString("\n");
+			
+			output_file.WriteString("VERSION\n");
+			output_file.WriteString(sToken);
+			output_file.WriteString("\n");
+		}
+		else if (nVersion < INT_MAX)
+		{
+			if (0 == sLine.Find("User: "))
+			{
+				//User
+				sToken = sLine.Mid(6, 13);
+				sToken.TrimRight();
+
+				output_file.WriteString("USER\n");
+				output_file.WriteString(sToken);
+				output_file.WriteString("\n");
+
+				//Time
+				sToken = sLine.Mid(25, 9);
+				sToken.TrimLeft();
+				sToken.TrimRight();
+				sToken.Replace('.', '-');
+				ASSERT('-' == sToken[2]);
+				ASSERT('-' == sToken[5]);
+
+				if ('9' == sToken[0])
+				{
+					ASSERT('8' == sToken[1] || '9' == sToken[1]);// =1998 || 1999
+					sToken = "19" + sToken;
+				}
+				else
+				{
+					ASSERT('0' == sToken[0]);// =200x
+					sToken = "20" + sToken;
+				}
+
+				output_file.WriteString("TIME\n");
+				output_file.WriteString(sToken);
+				output_file.WriteString(" ");
+
+				sToken = sLine.Mid(43, 5);
+				sToken.TrimRight();
+				if (4 == sToken.GetLength())
+				{
+					sToken = "0" + sToken;
+				}
+
+				ASSERT(5 == sToken.GetLength());
+				ASSERT(':' == sToken[2]);
+
+				output_file.WriteString(sToken);
+				output_file.WriteString("\n");
+			}
+			else if ("Branched" == sLine)
+			{
+				output_file.WriteString("BRANCHED\n");
+			}
+			else if ("Created" == sLine)
+			{
+				ASSERT(1 == nVersion);
+				output_file.WriteString("CREATED\n");
+			}
+			else if (0 == sLine.Find("Comment: "))
+			{
+				if (9 < sLine.GetLength())
+				{
+					sToken = sLine.Right(sLine.GetLength() - 9);
+
+					output_file.WriteString("COMMENT\n");
+					output_file.WriteString(sToken);
+					output_file.WriteString("\n");
+				}
+			}
+			else if (0 == sLine.Find("Checked in $/"))
+			{
+				output_file.WriteString("COMMIT\n");
+			}
+			else if (0 == sLine.Find("Labeled"))
+			{
+				output_file.WriteString("TAG\n");
+			}
+			else
+			{
+				output_file.WriteString("UNKNOWN\n");
+				output_file.WriteString(sLine);
+				output_file.WriteString("\n");
+			}
+				
+		}
+
 	}
 
+	output_file.Flush();
 	fileDump.Close();
 }
 
@@ -122,6 +230,7 @@ static void Step2_CollectPaths(LPCTSTR szInputFile, LPCTSTR szOutputFile)
 
 				sCurrentFolder.Delete(sCurrentFolder.GetLength()-1); //delete ':'
 
+				//fileO.Flush();
 				printf("\r>> %d%%", 100 * fileI.GetPosition() / dwFileLength);
 			}
 			else if (-1 != sLine.Find(".cpp") ||
