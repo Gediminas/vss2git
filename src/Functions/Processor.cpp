@@ -38,7 +38,7 @@ static void CollectPaths(SDataVect &vect, LPCTSTR szInputFile, LPCTSTR szOutputF
 	{
 		CStdioFile file;
 		CFileException fe;
-		if (!file.Open(szInputFile, CFile::modeRead, &fe))
+		if (!file.Open(szInputFile, CFile::modeRead | CFile::shareDenyWrite, &fe))
 		{
 			printf("file error\n");
 			exit(1);
