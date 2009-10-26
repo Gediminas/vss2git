@@ -5,6 +5,8 @@
 
 namespace vss
 {
+	void init_root_workfolder(LPTSTR szWorkFolder);
+
 	void get_all();
 };
 //namespace vss
