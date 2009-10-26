@@ -32,11 +32,6 @@ static void Initialize()
 	//system(ss + " History $/Wood/MatrixKozijn/StdAfx.h >>..\\tmp\\history.txt");
 }
 
-static void AddFile(SDataVect &vect, LPCTSTR szFilePath, LPCTSTR szOutputFile)
-{
-	system(CString("ECHO ") + szFilePath + " >> " + szOutputFile);
-}
-
 static void CollectPaths(SDataVect &vect, LPCTSTR szInputFile, LPCTSTR szOutputFile)
 {
 	if (!file::StartJob(szOutputFile))
@@ -64,14 +59,29 @@ static void CollectPaths(SDataVect &vect, LPCTSTR szInputFile, LPCTSTR szOutputF
 
 			if (-1 != sLine.Find("$/"))
 			{
-				sCurrentFolder = sLine.Left(sLine.GetLength()-1);
+				//FOLDER 'CHANGED'
+				sCurrentFolder = sLine;
+
+				while (':' != sCurrentFolder[sCurrentFolder.GetLength()-1])
+				{
+					if (!file.ReadString(sLine))
+					{
+						ASSERT(FALSE);
+						return;
+					}
+
+					sCurrentFolder += sLine;
+				}
+
+				sCurrentFolder.Delete(sCurrentFolder.GetLength()-1); //delete ':'
 
 				printf("\r>> %d%%", 100 * file.GetPosition() / dwFileLength);
 			}
 			else if (-1 != sLine.Find(".cpp") ||
 					(-1 != sLine.Find(".h"))   )
 			{
-				AddFile(vect, sCurrentFolder + "/" + sLine, szOutputFile);
+				//ADD FILE
+				system(CString("ECHO ") + sCurrentFolder + "/" + sLine + " >> " + szOutputFile);
 			}
 		}
 

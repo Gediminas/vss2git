@@ -8,6 +8,7 @@ namespace vss
 	void init_root_workfolder(LPCTSTR szWorkFolder);
 
 	void list_all_files(LPCTSTR szOutputFile);
+	void list_file_versions(LPCTSTR szFile, LPCTSTR szOutputFile);
 };
 //namespace vss
 

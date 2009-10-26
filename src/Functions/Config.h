@@ -9,6 +9,8 @@ namespace paths
 	const LPCTSTR szWorkingDir    = "../tmp/Working";
 	const LPCTSTR szOutput1_Vss   = "../tmp/1_OutputVss.txt";
 	const LPCTSTR szOutput2_Paths = "../tmp/2_OutputPaths.txt";
+	const LPCTSTR szOutputVersions = "../tmp/OutputVersions.txt";
+
 }
 
 

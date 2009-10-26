@@ -11,7 +11,8 @@ static char THIS_FILE[]=__FILE__;
 #endif
 
 
-const CString ss_exe = "\"c:\\Program Files\\Microsoft Visual Studio\\Common\\VSS\\win32\\ss.exe\"";
+//const CString ss_exe = "\"c:\\Program Files\\Microsoft Visual Studio\\Common\\VSS\\win32\\ss.exe\"";
+const CString ss_exe = "..\\binSS\\ss.exe";
 
 
 void vss::init_root_workfolder(LPCTSTR szWorkFolder)
@@ -39,4 +40,20 @@ void vss::list_all_files(LPCTSTR szOutputFile)
 		
 		file::MarkJobDone(szOutputFile);
 	}
+}
+
+void vss::list_file_versions(LPCTSTR szFile, LPCTSTR szOutputFile)
+{
+	CString sCommand;
+	sCommand.Format(FormatStr("%s History \"%s\" >> %s", ss_exe, szFile, szOutputFile));
+	
+//	if (-1 != CString(sCommand).Find("DB "))
+//	{
+//		printf("\n--\n");
+//		printf(sCommand);
+//		system(sCommand);
+//		printf("\n--\n");
+//	}
+
+	system(sCommand);
 }
