@@ -13,17 +13,26 @@ static char THIS_FILE[]=__FILE__;
 #endif
 
 
-//	system("SET ssDir=");
-//	system("SET ssUser=");
-//	system("SET ssPwd=");
 
 const CString ss = "\"c:\\Program Files\\Microsoft Visual Studio\\Common\\VSS\\win32\\ss.exe\"";
 
 
 static void InitVss()
 {
+	printf(">> create folder '..\\tmp\\Working'\n");
+	::CreateDirectory("..\\tmp", NULL);
+	::CreateDirectory("..\\tmp\\Working", NULL);
+
+	printf(">> set as working folder\n");
 	system(ss + " workfold $/ ..\\tmp\\Working");
+	printf("\n");
+
+	printf(">> Generating 'history.txt' for StdAfx.h\n");
 	system(ss + " History $/Wood/MatrixKozijn/StdAfx.h >>..\\tmp\\history.txt");
+
+	printf(">> Generating 'all_files.txt'\n");
+	system(ss + " Dir -R -E >> ..\\tmp\\all_files.txt");
+	//printf("\n");
 
 }
 
