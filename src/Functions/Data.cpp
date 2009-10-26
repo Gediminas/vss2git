@@ -9,3 +9,26 @@ static char THIS_FILE[]=__FILE__;
 #endif
 
 
+template<typename T>
+class TDeletor 
+{
+public:
+	void operator()(const T *ptr)
+	{
+		delete ptr;
+	}
+};
+
+
+
+SDataVect::SDataVect()
+{
+
+}
+
+SDataVect::~SDataVect()
+{
+	TDeletor<SData> del;
+	std::for_each(begin(), end(), del);
+}
+

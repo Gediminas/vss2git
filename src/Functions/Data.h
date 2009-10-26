@@ -5,7 +5,19 @@
 
 struct SData
 {
+	std::string path;
+	std::string date;
+	std::string user;
 
+	int version;
+};
+
+
+class SDataVect : public std::vector<SData*>
+{
+public:
+	SDataVect();
+	~SDataVect();
 };
 
 
