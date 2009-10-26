@@ -44,6 +44,8 @@ void vss::list_all_files(LPCTSTR szOutputFile)
 
 void vss::list_file_versions(LPCTSTR szFile, LPCTSTR szOutputFile)
 {
+	::DeleteFile(szOutputFile);
+
 	CString sCommand;
 	sCommand.Format(FormatStr("%s History \"%s\" >> %s", ss_exe, szFile, szOutputFile));
 	

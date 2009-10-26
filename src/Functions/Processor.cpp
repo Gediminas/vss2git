@@ -32,6 +32,37 @@ static void Initialize()
 	//system(ss + " History $/Wood/MatrixKozijn/StdAfx.h >>..\\tmp\\history.txt");
 }
 
+static void AddFile(LPCTSTR szFilePath, CStdioFile &output_file)
+{
+	output_file.WriteString(szFilePath);
+	output_file.WriteString("\n");
+
+	vss::list_file_versions(szFilePath, paths::szDump);
+
+	CStdioFile fileDump;
+	CFileException fe;
+
+	if (!fileDump.Open(paths::szDump, CFile::modeRead | CFile::shareDenyWrite, &fe))
+	{
+		printf(">> dump file error\n");
+		getchar();
+		exit(1);
+	}
+
+	CString sLine;
+
+	while (fileDump.ReadString(sLine))
+	{
+		if (sLine.IsEmpty())
+		{
+			continue;
+		}
+
+	}
+
+	fileDump.Close();
+}
+
 static void Step1_VssPaths(LPCTSTR szOutputFile)
 {
 	printf("\nSTEP1\n");
@@ -44,21 +75,29 @@ static void Step2_CollectPaths(LPCTSTR szInputFile, LPCTSTR szOutputFile)
 
 	if (!file::StartJob(szOutputFile))
 	{
-		CStdioFile file;
+		CStdioFile fileI, fileO;
 		CFileException fe;
-		if (!file.Open(szInputFile, CFile::modeRead | CFile::shareDenyWrite, &fe))
+
+		if (!fileI.Open(szInputFile, CFile::modeRead | CFile::shareDenyWrite, &fe))
 		{
-			printf("file error\n");
+			printf(">> input file error\n");
+			getchar();
+			exit(1);
+		}
+
+		if (!fileO.Open(szOutputFile, CFile::modeCreate | CFile::modeWrite | CFile::shareDenyNone, &fe))
+		{
+			printf(">> output file error\n");
 			exit(1);
 		
 		}
 
-		const DWORD dwFileLength = file.GetLength();
+		const DWORD dwFileLength = fileI.GetLength();
 
 		CString sLine;
 		CString sCurrentFolder;
 
-		while (file.ReadString(sLine))
+		while (fileI.ReadString(sLine))
 		{
 			if (sLine.IsEmpty())
 			{
@@ -72,7 +111,7 @@ static void Step2_CollectPaths(LPCTSTR szInputFile, LPCTSTR szOutputFile)
 
 				while (':' != sCurrentFolder[sCurrentFolder.GetLength()-1])
 				{
-					if (!file.ReadString(sLine))
+					if (!fileI.ReadString(sLine))
 					{
 						ASSERT(FALSE);
 						return;
@@ -83,17 +122,17 @@ static void Step2_CollectPaths(LPCTSTR szInputFile, LPCTSTR szOutputFile)
 
 				sCurrentFolder.Delete(sCurrentFolder.GetLength()-1); //delete ':'
 
-				printf("\r>> %d%%", 100 * file.GetPosition() / dwFileLength);
+				printf("\r>> %d%%", 100 * fileI.GetPosition() / dwFileLength);
 			}
 			else if (-1 != sLine.Find(".cpp") ||
 					(-1 != sLine.Find(".h"))   )
 			{
-				//ADD FILE
-				system(CString("ECHO ") + sCurrentFolder + "/" + sLine + " >> " + szOutputFile);
+				AddFile(sCurrentFolder + "/" + sLine, fileO);
 			}
 		}
 
-		file.Close();
+		fileI.Close();
+		fileO.Close();
 		file::MarkJobDone(szOutputFile);
 	}
 };
