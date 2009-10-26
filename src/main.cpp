@@ -15,11 +15,12 @@ CWinApp theApp;
 
 int _tmain(int argc, TCHAR* argv[], TCHAR* envp[])
 {
-	printf("WARNING: Set these user environment variables before start (example):\n");
-	printf("ssDir=\\\\vilnius\\sources-vss\\MxKozijn\n");
-	printf("ssUser=Ilgas\n");
-	printf("ssPwd=\n");
-	printf("\n");
+	printf("--------------------------\n");
+	system("SET ssDir");
+	system("SET ssUser");
+	system("SET ssPwd");
+	printf("--------------------------\n");
+
 	//printf("Press any key to start!\n");
 	//getchar();
 
