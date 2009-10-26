@@ -45,7 +45,7 @@ void file::CleanupJob(LPCTSTR szFilePath)
 void file::MarkJobDone(LPCTSTR szFilePath)
 {
 	system(FormatStr("ECHO DONE. >> %s.DONE", szFilePath));
-	printf(">> done\n");
+	printf("\r>> done\n");
 }
 
 

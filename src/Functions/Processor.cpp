@@ -50,6 +50,8 @@ static void CollectPaths(SDataVect &vect, LPCTSTR szInputFile, LPCTSTR szOutputF
 		
 		}
 
+		const DWORD dwFileLength = file.GetLength();
+
 		CString sLine;
 		CString sCurrentFolder;
 
@@ -63,6 +65,8 @@ static void CollectPaths(SDataVect &vect, LPCTSTR szInputFile, LPCTSTR szOutputF
 			if (-1 != sLine.Find("$/"))
 			{
 				sCurrentFolder = sLine.Left(sLine.GetLength()-1);
+
+				printf("\r>> %d%%", 100 * file.GetPosition() / dwFileLength);
 			}
 			else if (-1 != sLine.Find(".cpp") ||
 					(-1 != sLine.Find(".h"))   )
