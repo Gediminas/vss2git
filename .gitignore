@@ -29,6 +29,6 @@
 *.his
 *.idx
 *.scc
-*.txt
 vss*.pdb
 vc*.pdb
+/tmp
