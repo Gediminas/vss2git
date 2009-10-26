@@ -16,10 +16,36 @@ static char THIS_FILE[]=__FILE__;
 //	return sPath;
 //}
 
-bool file::DoesFileExist(LPTSTR szFilePath)
+bool file::DoesFileExist(LPCTSTR szFilePath)
 {
 	CFileFind ff;
 	return TRUE == ff.FindFile(szFilePath);
+}
+
+bool file::StartJob(LPCTSTR szFilePath)
+{
+	printf(">> generate '%s'\n", szFilePath);
+	
+	if (!file::DoesFileExist(szFilePath) || !file::DoesFileExist(CString(szFilePath) + ".DONE"))
+	{
+		CleanupJob(szFilePath);
+		return false;
+	}
+
+	printf(">> already exist\n");
+	return true;
+}
+
+void file::CleanupJob(LPCTSTR szFilePath)
+{
+	::DeleteFile(szFilePath);
+	::DeleteFile(CString(szFilePath) + ".DONE");
+}
+
+void file::MarkJobDone(LPCTSTR szFilePath)
+{
+	system(FormatStr("ECHO DONE. >> %s.DONE", szFilePath));
+	printf(">> done\n");
 }
 
 

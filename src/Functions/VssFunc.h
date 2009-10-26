@@ -5,9 +5,9 @@
 
 namespace vss
 {
-	void init_root_workfolder(LPTSTR szWorkFolder);
+	void init_root_workfolder(LPCTSTR szWorkFolder);
 
-	void list_all_files(LPTSTR szOutputFile);
+	void list_all_files(LPCTSTR szOutputFile);
 };
 //namespace vss
 

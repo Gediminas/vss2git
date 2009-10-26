@@ -5,6 +5,7 @@
 #include "VssFunc.h"
 #include "GitFunc.h"
 #include "FileFunc.h"
+#include "Config.h"
 
 //#include "Tools/FileUtil.h"
 //#include "Tools/FileUtilEx.h"
@@ -17,71 +18,76 @@ static char THIS_FILE[]=__FILE__;
 #endif
 
 
-const LPTSTR s_sz_list_all_files = "..\\tmp\\all_files.txt";
-
 static void Initialize()
 {
-	printf(">> create folder '..\\tmp\\Working'\n");
-	::CreateDirectory("..\\tmp", NULL);
-	::CreateDirectory("..\\tmp\\Working", NULL);
+	printf(">> create folder '%s'\n", paths::szWorkingDir);
+
+	::CreateDirectory(paths::szTmpDir, NULL);
+	::CreateDirectory(paths::szWorkingDir, NULL);
 	printf("\n");
 
-	vss::init_root_workfolder("..\\tmp\\Working");
+	vss::init_root_workfolder(paths::szWorkingDir);
 
 	//printf(">> generate - 'history.txt' (for StdAfx.h)\n");
 	//system(ss + " History $/Wood/MatrixKozijn/StdAfx.h >>..\\tmp\\history.txt");
 }
 
-static void Collect(SDataVect &vect)
+static void AddFile(SDataVect &vect, LPCTSTR szFilePath, LPCTSTR szOutputFile)
 {
+	system(CString("ECHO ") + szFilePath + " >> " + szOutputFile);
+}
 
-	vss::list_all_files(s_sz_list_all_files);
-
-	CStdioFile file;
-	CFileException fe;
-	if (!file.Open(s_sz_list_all_files, CFile::modeRead, &fe))
+static void CollectPaths(SDataVect &vect, LPCTSTR szInputFile, LPCTSTR szOutputFile)
+{
+	if (!file::StartJob(szOutputFile))
 	{
-		printf("file error\n");
-		exit(1);
-	
+		CStdioFile file;
+		CFileException fe;
+		if (!file.Open(szInputFile, CFile::modeRead, &fe))
+		{
+			printf("file error\n");
+			exit(1);
+		
+		}
+
+		CString sLine;
+		CString sCurrentFolder;
+
+		while (file.ReadString(sLine))
+		{
+			if (sLine.IsEmpty())
+			{
+				continue;
+			}
+
+			if (-1 != sLine.Find("$/"))
+			{
+				sCurrentFolder = sLine.Left(sLine.GetLength()-1);
+			}
+			else if (-1 != sLine.Find(".cpp") ||
+					(-1 != sLine.Find(".h"))   )
+			{
+				AddFile(vect, sCurrentFolder + "/" + sLine, szOutputFile);
+			}
+		}
+
+		file.Close();
+		file::MarkJobDone(szOutputFile);
 	}
-
-	CString sLogFile = "..\\tmp\\tree.log";
-	::DeleteFile(sLogFile);
-
-	CString sLine;
-	while (file.ReadString(sLine))
-	{
-		if (sLine.IsEmpty())
-		{
-			continue;
-		}
-
-		if (-1 != sLine.Find("$/"))
-		{
-			system(CString("ECHO ADD FOLDER ") + sLine +" >> " + sLogFile);
-		}
-		else if (-1 != sLine.Find(".cpp") ||
-				(-1 != sLine.Find(".h"))   )
-		{
-			system(CString("ECHO ADD FILE ") + sLine +" >> " + sLogFile);
-		}
-		else
-		{
-			//system(CString("ECHO skip ") + sLine +" >> " + sLogFile);
-		}
-	}
-
-	file.Close();
 };
 
 
 void processor::Run()
 {
+	printf("\nINIT\n");
 	Initialize();
 
+	printf("\nSTEP1\n");
+	vss::list_all_files(paths::szOutput1_Vss);
+
+	printf("\nSTEP2\n");
 	SDataVect vect;
-	Collect(vect);
+	CollectPaths(vect, paths::szOutput1_Vss, paths::szOutput2_Paths);
 
 }
 

@@ -32,7 +32,20 @@
 
 // TODO: reference additional headers your program requires here
 
-//{{AFX_INSERT_LOCATION}}
-// Microsoft Visual C++ will insert additional declarations immediately before the previous line.
+
+inline CString FormatStr(LPCSTR pszFormat, ...)
+{
+	va_list arglist;
+	va_start(arglist, pszFormat);
+
+	CString str;
+	str.FormatV(pszFormat, arglist);
+
+	va_end(arglist);
+
+	return str;
+}
+
+
 
 #endif // !defined(AFX_STDAFX_H__5A8C4A14_B713_44A8_A1FB_0ECDC81D5D31__INCLUDED_)

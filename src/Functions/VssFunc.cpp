@@ -14,11 +14,11 @@ static char THIS_FILE[]=__FILE__;
 const CString ss_exe = "\"c:\\Program Files\\Microsoft Visual Studio\\Common\\VSS\\win32\\ss.exe\"";
 
 
-void vss::init_root_workfolder(LPTSTR szWorkFolder)
+void vss::init_root_workfolder(LPCTSTR szWorkFolder)
 {
 	printf(">> set root working folder\n");
 
-	system(ss_exe + " workfold $/ ..\\tmp\\Working");
+	system(FormatStr(ss_exe + " workfold $/ %s", szWorkFolder));
 	
 	printf("\n");
 	printf("\n");
@@ -29,19 +29,14 @@ void vss::init_root_workfolder(LPTSTR szWorkFolder)
 }
 
 
-void vss::list_all_files(LPTSTR szOutputFile)
+void vss::list_all_files(LPCTSTR szOutputFile)
 {
-	printf(">> generate 'all_files.txt'\n");
-	if (!file::DoesFileExist(szOutputFile))
+	if (!file::StartJob(szOutputFile))
 	{
-		CString sCommand;
-		sCommand.Format("%s Dir -R -E >> %s", ss_exe, szOutputFile);
-		system(sCommand);
-
-		printf("     - finished\n");
-	}
-	else
-	{
-		printf("     - skipping (already exist)\n");
+		file::CleanupJob(szOutputFile);
+		
+		system(FormatStr("%s Dir -R -E >> %s", ss_exe, szOutputFile));
+		
+		file::MarkJobDone(szOutputFile);
 	}
 }

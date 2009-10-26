@@ -5,7 +5,11 @@
 
 namespace file
 {
-	bool DoesFileExist(LPTSTR szFilePath);
+	bool DoesFileExist(LPCTSTR szFilePath);
+	
+	bool StartJob(LPCTSTR szFilePath);
+	void CleanupJob(LPCTSTR szFilePath);
+	void MarkJobDone(LPCTSTR szFilePath);
 };
 //namespace file
 
