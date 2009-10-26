@@ -17,6 +17,8 @@ static char THIS_FILE[]=__FILE__;
 #endif
 
 
+const LPTSTR s_sz_list_all_files = "..\\tmp\\all_files.txt";
+
 static void Initialize()
 {
 	printf(">> create folder '..\\tmp\\Working'\n");
@@ -33,11 +35,44 @@ static void Initialize()
 static void Collect(SDataVect &vect)
 {
 
-	vss::get_all();
+	vss::list_all_files(s_sz_list_all_files);
 
+	CStdioFile file;
+	CFileException fe;
+	if (!file.Open(s_sz_list_all_files, CFile::modeRead, &fe))
+	{
+		printf("file error\n");
+		exit(1);
+	
+	}
 
-	//printf("\n");
+	CString sLogFile = "..\\tmp\\tree.log";
+	::DeleteFile(sLogFile);
 
+	CString sLine;
+	while (file.ReadString(sLine))
+	{
+		if (sLine.IsEmpty())
+		{
+			continue;
+		}
+
+		if (-1 != sLine.Find("$/"))
+		{
+			system(CString("ECHO FOLDER ") + sLine +" >> " + sLogFile);
+		}
+		else if (-1 != sLine.Find(".cpp") ||
+				(-1 != sLine.Find(".h"))   )
+		{
+			system(CString("ECHO ADD ") + sLine +" >> " + sLogFile);
+		}
+		else
+		{
+			system(CString("ECHO skip ") + sLine +" >> " + sLogFile);
+		}
+	}
+
+	file.Close();
 };
 
 

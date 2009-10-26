@@ -29,12 +29,15 @@ void vss::init_root_workfolder(LPTSTR szWorkFolder)
 }
 
 
-void vss::get_all()
+void vss::list_all_files(LPTSTR szOutputFile)
 {
 	printf(">> generate 'all_files.txt'\n");
-	if (!file::DoesFileExist("..\\tmp\\all_files.txt"))
+	if (!file::DoesFileExist(szOutputFile))
 	{
-		system(ss_exe + " Dir -R -E >> ..\\tmp\\all_files.txt");
+		CString sCommand;
+		sCommand.Format("%s Dir -R -E >> %s", ss_exe, szOutputFile);
+		system(sCommand);
+
 		printf("     - finished\n");
 	}
 	else

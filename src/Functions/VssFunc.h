@@ -7,7 +7,7 @@ namespace vss
 {
 	void init_root_workfolder(LPTSTR szWorkFolder);
 
-	void get_all();
+	void list_all_files(LPTSTR szOutputFile);
 };
 //namespace vss
 

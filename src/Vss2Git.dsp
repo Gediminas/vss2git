@@ -103,6 +103,14 @@ SOURCE=.\Functions\Data.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\Functions\FileFunc.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Functions\FileFunc.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Functions\GitFunc.cpp
 # End Source File
 # Begin Source File
