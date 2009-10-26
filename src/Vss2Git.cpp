@@ -1,11 +1,17 @@
-// Vss2Git.cpp : Defines the entry point for the console application.
-//
-
 #include "stdafx.h"
+
+#include "Functions/Processor.h"
+
 
 int main(int argc, char* argv[])
 {
-	printf("Hello World!\n");
+	printf("Press any key to start!\n");
+	getchar();
+
+	processor::Collect();
+
+	printf("Done!\n");
+	getchar();
 	return 0;
 }
 
