@@ -8,8 +8,8 @@ namespace paths
 	const LPCTSTR szTmpDir       = "../tmp";
 	const LPCTSTR szWorkingDir   = "../tmp/Working";
 	const LPCTSTR szStep1_VssDir = "../tmp/Step1_VssDir.txt";
-	const LPCTSTR szStep2_Paths  = "../tmp/Step2_Paths.txt";
-	const LPCTSTR szStep3_Info   = "../tmp/Step3_Info.txt";
+	const LPCTSTR szStep2_Paths  = "../tmp/Step2_Info.txt";
+	//const LPCTSTR szStep3_Info   = "../tmp/Step3_Info.txt";
 
 	const LPCTSTR szDump         = "../tmp/dump.txt";
 }

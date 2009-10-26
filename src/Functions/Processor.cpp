@@ -34,7 +34,15 @@ static void Initialize()
 
 static void AddFile(LPCTSTR szFilePath, CStdioFile &output_file)
 {
-	vss::list_file_versions(szFilePath, paths::szDump);
+	CString sFilePath = szFilePath;
+
+	if (-1 != sFilePath.Find("MatrixKozijnTools"))
+	{
+		ASSERT(FALSE);
+		sFilePath.Replace("MatrixKozijnTools", "MatrixKozijn Tools");
+	}
+
+	vss::list_file_versions(sFilePath, paths::szDump);
 
 	CStdioFile fileDump;
 	CFileException fe;
@@ -47,7 +55,7 @@ static void AddFile(LPCTSTR szFilePath, CStdioFile &output_file)
 	}
 
 	CString sLine, sToken;
-	int nToken;
+	int nToken, nPos;
 	int nVersion = INT_MAX;
 
 	while (fileDump.ReadString(sLine))
@@ -73,7 +81,7 @@ static void AddFile(LPCTSTR szFilePath, CStdioFile &output_file)
 			output_file.WriteString("**********\n");
 
 			output_file.WriteString("FILE\n");
-			output_file.WriteString(szFilePath);
+			output_file.WriteString(sFilePath);
 			output_file.WriteString("\n");
 			
 			output_file.WriteString("VERSION\n");
@@ -93,9 +101,10 @@ static void AddFile(LPCTSTR szFilePath, CStdioFile &output_file)
 				output_file.WriteString("\n");
 
 				//Time
-				sToken = sLine.Mid(25, 9);
-				sToken.TrimLeft();
-				sToken.TrimRight();
+				nPos = sLine.Find("Date: ") + 6;
+				sToken = sLine.Mid(nPos, 8);
+				//sToken.TrimLeft();
+				//sToken.TrimRight();
 				sToken.Replace('.', '-');
 				ASSERT('-' == sToken[2]);
 				ASSERT('-' == sToken[5]);
@@ -115,8 +124,9 @@ static void AddFile(LPCTSTR szFilePath, CStdioFile &output_file)
 				output_file.WriteString(sToken);
 				output_file.WriteString(" ");
 
-				sToken = sLine.Mid(43, 5);
-				sToken.TrimRight();
+				nPos = sLine.Find("Time: ") + 6;
+				sToken = sLine.Mid(nPos, 5);
+				sToken.TrimLeft();
 				if (4 == sToken.GetLength())
 				{
 					sToken = "0" + sToken;
@@ -158,7 +168,7 @@ static void AddFile(LPCTSTR szFilePath, CStdioFile &output_file)
 			}
 			else
 			{
-				output_file.WriteString("UNKNOWN\n");
+				output_file.WriteString("TRASH\n");
 				output_file.WriteString(sLine);
 				output_file.WriteString("\n");
 			}
@@ -167,7 +177,7 @@ static void AddFile(LPCTSTR szFilePath, CStdioFile &output_file)
 
 	}
 
-	output_file.Flush();
+	//output_file.Flush();
 	fileDump.Close();
 }
 
@@ -225,12 +235,19 @@ static void Step2_CollectPaths(LPCTSTR szInputFile, LPCTSTR szOutputFile)
 						return;
 					}
 
+					if (sCurrentFolder.GetLength() < 79)
+					{
+						//ASSERT(sCurrentFolder.GetLength() == 80);
+						sCurrentFolder += " ";
+					}
+
 					sCurrentFolder += sLine;
 				}
 
+				ASSERT(':' == sCurrentFolder[sCurrentFolder.GetLength()-1]);
 				sCurrentFolder.Delete(sCurrentFolder.GetLength()-1); //delete ':'
 
-				//fileO.Flush();
+				fileO.Flush();
 				printf("\r>> %d%%", 100 * fileI.GetPosition() / dwFileLength);
 			}
 			else if (-1 != sLine.Find(".cpp") ||
@@ -313,7 +330,7 @@ void processor::Run()
 
 	Step1_VssPaths      (paths::szStep1_VssDir);
 	Step2_CollectPaths  (paths::szStep1_VssDir, paths::szStep2_Paths);
-	Step3_CollectAllInfo(paths::szStep2_Paths,  paths::szStep3_Info);
+	//Step3_CollectAllInfo(paths::szStep2_Paths,  paths::szStep3_Info);
 
 	//SDataVect vect;
 }
