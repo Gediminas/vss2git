@@ -412,7 +412,8 @@ static bool BuildGroupDataVect(SDataVect &vect_for_auto_delete, SGroupDataVect &
 //
 //		bool bAdd = false;
 		CString sLine;
-//		SData *pData = NULL;
+		SGroupData *pGroupData = NULL;
+		SData *pData = NULL;
 
 		while (fileInput.ReadString(sLine))
 		{
@@ -423,12 +424,30 @@ static bool BuildGroupDataVect(SDataVect &vect_for_auto_delete, SGroupDataVect &
 
 			if ("**********" == sLine)
 			{
-				do
+				group_vect.push_back(pGroupData = new SGroupData);
+				
+				fileInput.ReadString(sLine);
+				ASSERT(group_vect.size() == atoi(sLine));
+
+				fileInput.ReadString(sLine);
+				pGroupData->time = sLine;
+
+				fileInput.ReadString(sLine);
+				pGroupData->user = sLine;
+
+				fileInput.ReadString(sLine);
+				while (!sLine.IsEmpty())
 				{
+					vect_for_auto_delete.push_back(pData = new SData);
+					pGroupData->data_vect->push_back(pData);
+					pData->file = sLine;
+
+					fileInput.ReadString(sLine);
+					pData->version = atoi(sLine);
+					ASSERT(0 < pData->version);
+
 					fileInput.ReadString(sLine);
 				}
-				while (!sLine.IsEmpty());
-			
 			}
 			else
 			{
@@ -659,6 +678,9 @@ static void Step4_Import(LPCTSTR szInputFile, LPCTSTR szOutputFile)
 			getchar();
 			exit(1);
 		}
+
+		printf(FormatStr(">> estimated VSS GET    count: %7d\n", vect_for_auto_delete.size()));
+		printf(FormatStr(">> estimated GIT COMMIT count: %7d\n", group_vect.size()));
 
 		//file::MarkJobDone(szOutputFile);
 	}
