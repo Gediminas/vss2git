@@ -50,7 +50,7 @@ public:
 	void operator () (SData* pData);
 	~CDataVectGrouping();
 
-	void ValidateGroup(SGroupData *pGroupData);
+	void ValidateLastGroup();
 
 private:
 	CString sLastTime;

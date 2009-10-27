@@ -129,7 +129,7 @@ void CStoreGroupData::operator () (SGroupData* pGroupData)
 	for (SDataVect::iterator it = pGroupData->data_vect->begin(); pGroupData->data_vect->end() != it; ++ it)
 	{
 		SData *&data = (*it);
-		m_file.WriteString(FormatStr("%d\n%s\n", data->version, data->file));
+		m_file.WriteString(FormatStr("%s\n%d\n", data->file, data->version));
 	}
 
 	m_file.WriteString("\n");
@@ -168,7 +168,7 @@ void CDataVectGrouping::operator () (SData* pData)
 
 	if (sLastUser != pData->user || sLastDate != sThisDate)
 	{
-		ValidateGroup(m_pLastGroupData);
+		ValidateLastGroup();
 		m_group_vect.push_back(m_pLastGroupData = new SGroupData);
 	}
 
@@ -179,7 +179,44 @@ void CDataVectGrouping::operator () (SData* pData)
 	m_pLastGroupData->data_vect->push_back(pData);
 }
 
-void CDataVectGrouping::ValidateGroup(SGroupData *pGroupData)
+inline bool FindGreaterVersion(SDataVect &vect, SData *pByData)
 {
+	SData *pTmpData;
 
+	for (SDataVect::iterator it = vect.begin(); vect.end() != it; ++ it)
+	{
+		pTmpData = *it;
+
+		if (pByData->file == pTmpData->file)
+		{
+			if (pByData->version < pTmpData->version)
+			{
+				ASSERT(1 != pByData->time.Compare(pTmpData->time));
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
+
+void CDataVectGrouping::ValidateLastGroup()
+{
+	if (NULL == m_pLastGroupData)
+	{
+		return;
+	}
+
+	ASSERT(NULL != m_pLastGroupData->data_vect);
+	SDataVect &vect = *(m_pLastGroupData->data_vect);
+
+	for (SDataVect::iterator it = vect.begin(); vect.end() != it; ++ it)
+	{
+		if (FindGreaterVersion(vect, *it))
+		{
+			vect.erase(it);
+			--it;
+		}
+   	}
 }

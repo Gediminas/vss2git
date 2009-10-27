@@ -386,11 +386,11 @@ static bool StoreDataVect(const SGroupDataVect &group_vect, LPCTSTR szOutputFile
 	return true;
 }
 
-static bool GroupDataVect(SDataVect &vect, SGroupDataVect &group_vect)
+static void GroupDataVect(SDataVect &vect, SGroupDataVect &group_vect)
 {
 	CDataVectGrouping group(group_vect);
 	std::for_each(vect.begin(), vect.end(), group);
-	return true;
+	group.ValidateLastGroup();
 }
 
 inline bool CheckExt(const CString &sLine, LPCTSTR szExt)
@@ -567,12 +567,7 @@ static void Step3_GroupInfo(LPCTSTR szInputFile, LPCTSTR szOutputFile)
 		std::sort(vect.begin(), vect.end(), data::compare_by_time_user);
 
 		printf(">> grouping vector by date+user\n");
-		if (!GroupDataVect(vect, group_vect))
-		{
-			printf(">> failed\n");
-			getchar();
-			exit(1);
-		}
+		GroupDataVect(vect, group_vect);
 
 		printf(">> storing data vector\n");
 		if (!StoreDataVect(group_vect, szOutputFile))
