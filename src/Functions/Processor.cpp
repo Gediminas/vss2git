@@ -19,6 +19,54 @@ static char THIS_FILE[]=__FILE__;
 
 
 
+class CImportGroupData
+{
+public:
+	CImportGroupData(int nCount)
+	: m_nCurrentLine(1),
+	  m_nCount(nCount)
+	{
+		m_pFileProgress = new CStdioFile;
+		
+		if (m_pFileProgress->Open(paths::szImportProgress, CFile::modeRead | CFile::shareDenyNone, NULL))
+		{
+			CString sLine;
+			VERIFY(m_pFileProgress->ReadString(sLine));
+			m_nCurrentLine = atoi(sLine);
+			m_pFileProgress->Close();
+		}
+
+		VERIFY(m_pFileProgress->Open(paths::szImportProgress, CFile::modeCreate | CFile::modeWrite | CFile::shareDenyNone, NULL));
+	}
+
+	~CImportGroupData()
+	{
+
+	}
+
+	void operator () (SGroupData* pGroupData)
+	{
+		m_pFileProgress->SetLength(0);
+		m_pFileProgress->WriteString(FormatStr("%d\n", ++ m_nCurrentLine));
+		printf("\r>> %d%%", 100 * m_nCurrentLine / m_nCount);
+	}
+
+	void Destroy()
+	{
+		m_pFileProgress->Close();
+		delete m_pFileProgress;
+		m_pFileProgress = NULL;
+	}
+
+private:
+	int m_nCurrentLine;
+	int m_nCount;
+	CStdioFile *m_pFileProgress;
+};
+
+
+
+
 static void AddFileVersions(LPCTSTR szFilePath, CStdioFile &output_file)
 {
 	CString sFilePath = szFilePath;
@@ -470,6 +518,16 @@ static bool BuildGroupDataVect(SDataVect &vect_for_auto_delete, SGroupDataVect &
 	return true;
 }
 
+static bool Import(SGroupDataVect &group_vect, LPCTSTR szOutputFile)
+{
+	CImportGroupData import(group_vect.size());
+	std::for_each(group_vect.begin(), group_vect.end(), import);
+	import.Destroy();
+		
+	printf("\r>> finished\n");
+	return true;
+}
+
 
 inline bool CheckExt(const CString &sLine, LPCTSTR szExt)
 {
@@ -628,6 +686,8 @@ static void Step3_GroupInfo(LPCTSTR szInputFile, LPCTSTR szOutputFile)
 
 	if (!file::StartJob(szOutputFile))
 	{
+		::DeleteFile(paths::szCounters);
+
 		SDataVect vect;
 		SGroupDataVect group_vect;
 
@@ -640,6 +700,7 @@ static void Step3_GroupInfo(LPCTSTR szInputFile, LPCTSTR szOutputFile)
 		}
 
 		printf(FormatStr(">> file+version count: %d\n", vect.size()));
+		system(FormatStr("ECHO FILE+VERSION count: %7d >> %s", vect.size(), paths::szCounters));
 
 		printf(">> sorting vector by date+user\n");
 		std::sort(vect.begin(), vect.end(), data::compare_by_time_user);
@@ -679,8 +740,18 @@ static void Step4_Import(LPCTSTR szInputFile, LPCTSTR szOutputFile)
 			exit(1);
 		}
 
-		printf(FormatStr(">> estimated VSS GET    count: %7d\n", vect_for_auto_delete.size()));
-		printf(FormatStr(">> estimated GIT COMMIT count: %7d\n", group_vect.size()));
+		printf(FormatStr(">> estimated VSS GET    count: %7d\n",  vect_for_auto_delete.size()));
+		printf(FormatStr(">> estimated GIT COMMIT count: %7d\n",  group_vect.size()));
+		system(FormatStr("ECHO estimated VSS GET    count: %7d >> %s", vect_for_auto_delete.size(), paths::szCounters));
+		system(FormatStr("ECHO estimated GIT COMMIT count: %7d >> %s", group_vect.size(),           paths::szCounters));
+
+		printf(">> IMPORTING\n");
+		if (!Import(group_vect, szOutputFile))
+		{
+			printf(">> IMPORT FAILED\n");
+			getchar();
+			exit(1);
+		}
 
 		//file::MarkJobDone(szOutputFile);
 	}
