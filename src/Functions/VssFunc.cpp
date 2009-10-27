@@ -53,7 +53,14 @@ void vss::list_file_versions(LPCTSTR szVssFile, LPCTSTR szOutputFile)
 
 void vss::get_file(LPCTSTR szVssFile, int nVssFileVersion, LPCTSTR szOutputFile)
 {
+	system(ss_exe + " Project");
+	getchar();
+
+	system(ss_exe + " Workfold");
+	getchar();
+
 	CString sCommand;
-	sCommand.Format(FormatStr("%s Get \"%s\" -V%d >> %s", ss_exe, szVssFile, nVssFileVersion, szOutputFile));
+	sCommand.Format(FormatStr("%s Get \"%s\" -V%d -O%s", ss_exe, szVssFile, nVssFileVersion, szOutputFile));
 	system(sCommand);
+	getchar();
 }

@@ -67,8 +67,8 @@ public:
 
 		for (SDataVect::iterator it = pGroupData->data_vect->begin(); pGroupData->data_vect->end() != it; ++ it)
 		{
-			//SData *&data = (*it);
-			//vss::get_file(data->file, data->version, m_sOutputFile);
+			SData *&data = (*it);
+			vss::get_file(data->file, data->version, m_sOutputFile);
 		}
 
 
