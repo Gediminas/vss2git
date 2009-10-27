@@ -577,7 +577,7 @@ static void Step3_GroupInfo(LPCTSTR szInputFile, LPCTSTR szOutputFile)
 			exit(1);
 		}
 
-		//file::MarkJobDone(szOutputFile);
+		file::MarkJobDone(szOutputFile);
 	}
 };
 
