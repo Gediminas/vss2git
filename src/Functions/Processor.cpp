@@ -420,6 +420,20 @@ static bool BuildGroupDataVect(SDataVect &vect_for_auto_delete, SGroupDataVect &
 			{
 				continue;
 			}
+
+			if ("**********" == sLine)
+			{
+				do
+				{
+					fileInput.ReadString(sLine);
+				}
+				while (!sLine.IsEmpty());
+			
+			}
+			else
+			{
+				printf(">> ERROR: Unknown line - " + sLine);
+			}
 		}
 	}
 	catch(CFileException *e)
@@ -638,7 +652,7 @@ static void Step4_Import(LPCTSTR szInputFile, LPCTSTR szOutputFile)
 		SDataVect vect_for_auto_delete;
 		SGroupDataVect group_vect;
 
-		printf(">> building data vector\n");
+		printf(">> building grouped data vector\n");
 		if (!BuildGroupDataVect(vect_for_auto_delete, group_vect, szInputFile))
 		{
 			printf(">> failed\n");
