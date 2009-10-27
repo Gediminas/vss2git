@@ -122,7 +122,10 @@ void CStoreGroupData::operator () (SGroupData* pGroupData)
 	ASSERT(pGroupData);
 	ASSERT(pGroupData->data_vect);
 
+	++ m_nProgressCurrent;
+
 	m_file.WriteString("**********\n");
+	m_file.WriteString(FormatStr("%%d\n", m_nProgressCurrent));
 	m_file.WriteString(pGroupData->time + "\n");
 	m_file.WriteString(pGroupData->user + "\n");
 
@@ -134,7 +137,6 @@ void CStoreGroupData::operator () (SGroupData* pGroupData)
 
 	m_file.WriteString("\n");
 
-	++ m_nProgressCurrent;
 	if (0 == m_nProgressCurrent % 1000)
 	{
 		printf("\r>> %d%%", 100 * m_nProgressCurrent / m_nProgressSize);

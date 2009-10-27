@@ -393,6 +393,51 @@ static void GroupDataVect(SDataVect &vect, SGroupDataVect &group_vect)
 	group.ValidateLastGroup();
 }
 
+
+static bool BuildGroupDataVect(SDataVect &vect_for_auto_delete, SGroupDataVect &group_vect, LPCTSTR szInputFile)
+{
+	CStdioFile fileInput;
+	CFileException fe;
+
+	if (!fileInput.Open(szInputFile, CFile::modeRead | CFile::shareDenyWrite, &fe))
+	{
+		printf(">> input file error\n");
+		getchar();
+		exit(1);
+	}
+
+	try
+	{
+//		const DWORD dwFileLength = fileInput.GetLength();
+//
+//		bool bAdd = false;
+		CString sLine;
+//		SData *pData = NULL;
+
+		while (fileInput.ReadString(sLine))
+		{
+			if (sLine.IsEmpty())
+			{
+				continue;
+			}
+		}
+	}
+	catch(CFileException *e)
+	{
+		e->ReportError();
+		ASSERT(FALSE);
+		e->Delete();
+
+		fileInput.Close();
+		return false;
+	}
+
+	fileInput.Close();
+	printf("\r>> finished\n");
+	return true;
+}
+
+
 inline bool CheckExt(const CString &sLine, LPCTSTR szExt)
 {
 	return ((sLine.GetLength() - strlen(szExt)) == sLine.Find(szExt));
@@ -582,12 +627,37 @@ static void Step3_GroupInfo(LPCTSTR szInputFile, LPCTSTR szOutputFile)
 };
 
 
+static void Step4_Import(LPCTSTR szInputFile, LPCTSTR szOutputFile)
+{
+	printf("\nSTEP4");
+	printf("\n>> ");
+	system("TIME/T");
+
+	if (!file::StartJob(szOutputFile))
+	{
+		SDataVect vect_for_auto_delete;
+		SGroupDataVect group_vect;
+
+		printf(">> building data vector\n");
+		if (!BuildGroupDataVect(vect_for_auto_delete, group_vect, szInputFile))
+		{
+			printf(">> failed\n");
+			getchar();
+			exit(1);
+		}
+
+		//file::MarkJobDone(szOutputFile);
+	}
+};
+
+
 void processor::Run()
 {
 	Initialize();
 	Step1_VssPaths    (paths::szStep1_VssDir);
 	Step2_CollectInfo (paths::szStep1_VssDir, paths::szStep2_Paths, paths::szStep2_SkippedPaths);
 	Step3_GroupInfo   (paths::szStep2_Paths,  paths::szStep3_Grouped);
+	Step4_Import      (paths::szStep3_Grouped,  paths::szStep4_Import);
 
 
 	printf("\n>> ");
