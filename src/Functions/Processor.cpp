@@ -256,18 +256,14 @@ static void Step2_CollectPaths(LPCTSTR szInputFile, LPCTSTR szOutputFile, LPCTST
 				continue;
 			}
 
-			if (-1 != sLine.Find("$/"))
+			if (0 == sLine.Find("$/"))
 			{
 				//FOLDER 'CHANGED'
 				sCurrentFolder = sLine;
 
 				while (':' != sCurrentFolder[sCurrentFolder.GetLength()-1] && fileI.ReadString(sLine))
 				{
-					if (0 == sLine.Find("No items found under $/"))
-					{
-						sCurrentFolder.Empty();
-						continue;
-					}
+					ASSERT(-1 == sLine.Find("No items found under $/"));
 
 					if (sCurrentFolder.GetLength() < 79)
 					{
@@ -295,11 +291,19 @@ static void Step2_CollectPaths(LPCTSTR szInputFile, LPCTSTR szOutputFile, LPCTST
 					CheckExt(sLine, ".c")   ||
 					CheckExt(sLine, ".hpp")  )
 				{
+					ASSERT(-1 == sLine.Find("No items found under $/"));
 					AddFile(sCurrentFolder + "/" + sLine, fileO);
 				}
 				else
 				{
-					AddSkippedFile(sCurrentFolder + "/" + sLine, fileSkipped);
+					if (-1 != sLine.Find("No items found under $/"))
+					{
+						sCurrentFolder.Empty();
+					}
+					else
+					{
+						AddSkippedFile(sCurrentFolder + "/" + sLine, fileSkipped);
+					}
 				}
 			}
 		}
