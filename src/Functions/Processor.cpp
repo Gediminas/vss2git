@@ -19,7 +19,7 @@ static char THIS_FILE[]=__FILE__;
 
 
 
-static void AddFile(LPCTSTR szFilePath, CStdioFile &output_file)
+static void AddFileVersions(LPCTSTR szFilePath, CStdioFile &output_file)
 {
 	CString sFilePath = szFilePath;
 
@@ -125,14 +125,26 @@ static void AddFile(LPCTSTR szFilePath, CStdioFile &output_file)
 				output_file.WriteString(sToken);
 				output_file.WriteString("\n");
 			}
+			else if (0 == sLine.Find("Label: "))
+			{
+				sToken = sLine.Mid(8, sLine.GetLength() - 9);
+				output_file.WriteString("LABEL\n");
+				output_file.WriteString(sToken);
+				output_file.WriteString("\n");
+			}
+			else if (0 == sLine.Find("Label comment: "))
+			{
+				if (15 < sLine.GetLength())
+				{
+					sToken = sLine.Right(sLine.GetLength() - 15);
+					output_file.WriteString("LABEL_COMMENT\n");
+					output_file.WriteString(sToken);
+					output_file.WriteString("\n");
+				}
+			}
 			else if ("Branched" == sLine)
 			{
-				output_file.WriteString("BRANCHED\n");
-			}
-			else if ("Created" == sLine)
-			{
-				ASSERT(1 == nVersion);
-				output_file.WriteString("CREATED\n");
+				output_file.WriteString("ACTION_BRANCHED\n");
 			}
 			else if (0 == sLine.Find("Comment: "))
 			{
@@ -145,13 +157,18 @@ static void AddFile(LPCTSTR szFilePath, CStdioFile &output_file)
 					output_file.WriteString("\n");
 				}
 			}
+			else if ("Created" == sLine)
+			{
+				ASSERT(1 == nVersion);
+				output_file.WriteString("ACTION_CREATED\n");
+			}
 			else if (0 == sLine.Find("Checked in $/"))
 			{
-				output_file.WriteString("COMMIT\n");
+				output_file.WriteString("ACTION_COMMITED\n");
 			}
 			else if (0 == sLine.Find("Labeled"))
 			{
-				output_file.WriteString("TAG\n");
+				output_file.WriteString("ACTION_LABELED\n");
 			}
 			else
 			{
@@ -294,7 +311,7 @@ static void Step2_CollectInfo(LPCTSTR szInputFile, LPCTSTR szOutputFile, LPCTSTR
 					CheckExt(sLine, ".hpp")  )
 				{
 					ASSERT(-1 == sLine.Find("No items found under $/"));
-					AddFile(sCurrentFolder + "/" + sLine, fileOutput);
+					AddFileVersions(sCurrentFolder + "/" + sLine, fileOutput);
 				}
 				else
 				{
@@ -313,6 +330,7 @@ static void Step2_CollectInfo(LPCTSTR szInputFile, LPCTSTR szOutputFile, LPCTSTR
 		fileInput.Close();
 		fileOutput.Close();
 		fileSkipped.Close();
+		::DeleteFile(paths::szDump);
 		file::MarkJobDone(szOutputFile);
 	}
 };
@@ -345,8 +363,8 @@ static void Step3_GroupInfo(LPCTSTR szInputFile, LPCTSTR szOutputFile)
 
 		const DWORD dwFileLength = fileInput.GetLength();
 
-		int nFileCommitCount = 0;
 		CString sLine;
+//		SData *pData = NULL;
 
 		while (fileInput.ReadString(sLine))
 		{
@@ -357,13 +375,82 @@ static void Step3_GroupInfo(LPCTSTR szInputFile, LPCTSTR szOutputFile)
 
 			if ("**********" == sLine)
 			{
-				++ nFileCommitCount;
+				//ASSERT(NULL == pData); //is asserts, previous was not processed
+				//pData = new SData;
+
+				fileOutput.Flush();
+
 				printf("\r>> %d%%", 100 * fileInput.GetPosition() / dwFileLength);
-				//fileOutput.Flush();
+			}
+			else if ("FILE" == sLine)
+			{
+				fileOutput.WriteString("\n");
+				fileOutput.WriteString("F:");
+				fileInput.ReadString(sLine);
+				fileOutput.WriteString(sLine + "\n");
+			}
+			else if ("VERSION" == sLine)
+			{
+				fileOutput.WriteString("V:");
+				fileInput.ReadString(sLine);
+				fileOutput.WriteString(sLine + "\n");
+			}
+			else if ("USER" == sLine)
+			{
+				fileOutput.WriteString("U:");
+				fileInput.ReadString(sLine);
+				fileOutput.WriteString(sLine + "\n");
+			}
+			else if ("TIME" == sLine)
+			{
+				fileOutput.WriteString("T:");
+				fileInput.ReadString(sLine);
+				fileOutput.WriteString(sLine + "\n");
+			}
+			else if ("TAG" == sLine)
+			{
+				fileOutput.WriteString("TAG:");
+				fileInput.ReadString(sLine);
+				fileOutput.WriteString(sLine + "\n");
+			}
+			else if ("COMMENT" == sLine)
+			{
+				fileOutput.WriteString("C:");
+				fileInput.ReadString(sLine);
+				fileOutput.WriteString(sLine + "\n");
+			}
+			else if ("COMMIT" == sLine)
+			{
+				//fileOutput.WriteString("F:");
+				//fileInput.ReadString(sLine);
+				//fileOutput.WriteString(sLine + "\n");
+			}
+			else if ("CREATED" == sLine)
+			{
+				//fileOutput.WriteString("F:");
+				//fileInput.ReadString(sLine);
+				//fileOutput.WriteString(sLine + "\n");
+			}
+			else if ("BRANCHED" == sLine)
+			{
+				//fileOutput.WriteString("F:");
+				//fileInput.ReadString(sLine);
+				//fileOutput.WriteString(sLine + "\n");
+			}
+			else if ("TRASH" == sLine)
+			{
+				fileOutput.WriteString("X:");
+				fileInput.ReadString(sLine);
+				fileOutput.WriteString(sLine + "\n");
+			}
+			else
+			{
+				fileOutput.WriteString(">> ERROR:");
+				fileOutput.WriteString(sLine + "\n");
+				printf(">> ERROR: Unrecognized token '%s'\n", sLine);
+
 			}
 		}
-
-		fileOutput.WriteString(FormatStr("FileCommitCount %d\n", nFileCommitCount));
 
 		fileInput.Close();
 		fileOutput.Close();

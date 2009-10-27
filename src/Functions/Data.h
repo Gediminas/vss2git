@@ -5,11 +5,11 @@
 
 struct SData
 {
-	std::string path;
-	std::string date;
-	std::string user;
-
-	int version;
+	SData() : version(0) { }
+	CString path;
+	CString date;
+	CString user;
+	int     version;
 };
 
 
