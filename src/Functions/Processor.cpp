@@ -18,19 +18,6 @@ static char THIS_FILE[]=__FILE__;
 #endif
 
 
-static void Initialize()
-{
-	printf(">> create folder '%s'\n", paths::szWorkingDir);
-
-	::CreateDirectory(paths::szTmpDir, NULL);
-	::CreateDirectory(paths::szWorkingDir, NULL);
-	printf("\n");
-
-	vss::init_root_workfolder(paths::szWorkingDir);
-
-	//printf(">> generate - 'history.txt' (for StdAfx.h)\n");
-	//system(ss + " History $/Wood/MatrixKozijn/StdAfx.h >>..\\tmp\\history.txt");
-}
 
 static void AddFile(LPCTSTR szFilePath, CStdioFile &output_file)
 {
@@ -189,13 +176,43 @@ static void AddSkippedFile(LPCTSTR szFilePath, CStdioFile &output_file)
 
 static void Step1_VssPaths(LPCTSTR szOutputFile)
 {
-	printf("\nSTEP1\n");
+	printf("\nSTEP1");
+	printf("\n>> ");
+	system("TIME/T");
 	vss::list_all_files(szOutputFile);
+}
+
+inline bool CheckExt(const CString &sLine, LPCTSTR szExt)
+{
+	return ((sLine.GetLength() - strlen(szExt)) == sLine.Find(szExt));
+
+}
+
+
+
+static void Initialize()
+{
+	printf("\nINIT");
+	printf("\n>> ");
+	system("TIME/T");
+
+	printf(">> create folder '%s'\n", paths::szWorkingDir);
+
+	::CreateDirectory(paths::szTmpDir, NULL);
+	::CreateDirectory(paths::szWorkingDir, NULL);
+	printf("\n");
+
+	vss::init_root_workfolder(paths::szWorkingDir);
+
+	//printf(">> generate - 'history.txt' (for StdAfx.h)\n");
+	//system(ss + " History $/Wood/MatrixKozijn/StdAfx.h >>..\\tmp\\history.txt");
 }
 
 static void Step2_CollectPaths(LPCTSTR szInputFile, LPCTSTR szOutputFile, LPCTSTR szOutputSkippedFile)
 {
-	printf("\nSTEP2\n");
+	printf("\nSTEP2");
+	printf("\n>> ");
+	system("TIME/T");
 
 	if (!file::StartJob(szOutputFile))
 	{
@@ -271,14 +288,19 @@ static void Step2_CollectPaths(LPCTSTR szInputFile, LPCTSTR szOutputFile, LPCTST
 				printf(sClearText);
 				printf("\r>> %.1f%% (%s)", 100.0 * fileI.GetPosition() / dwFileLength, sLogDir);
 			}
-			else if (-1 != sLine.Find(".cpp") ||
-					(-1 != sLine.Find(".h"))   )
-			{
-				AddFile(sCurrentFolder + "/" + sLine, fileO);
-			}
 			else if ('$' != sLine[0])
 			{
-				AddSkippedFile(sCurrentFolder + "/" + sLine, fileSkipped);
+				if (CheckExt(sLine, ".h")   ||
+					CheckExt(sLine, ".cpp") ||
+					CheckExt(sLine, ".c")   ||
+					CheckExt(sLine, ".hpp")  )
+				{
+					AddFile(sCurrentFolder + "/" + sLine, fileO);
+				}
+				else
+				{
+					AddSkippedFile(sCurrentFolder + "/" + sLine, fileSkipped);
+				}
 			}
 		}
 
@@ -291,7 +313,9 @@ static void Step2_CollectPaths(LPCTSTR szInputFile, LPCTSTR szOutputFile, LPCTST
 
 static void Step3_CollectAllInfo(LPCTSTR szInputFile, LPCTSTR szOutputFile)
 {
-	printf("\nSTEP3\n");
+	printf("\nSTEP3");
+	printf("\n>> ");
+	system("TIME/T");
 //	if (!file::StartJob(szOutputFile))
 //	{
 //		CStdioFile file;
@@ -351,14 +375,15 @@ static void Step3_CollectAllInfo(LPCTSTR szInputFile, LPCTSTR szOutputFile)
 
 void processor::Run()
 {
-	printf("\nINIT\n");
 	Initialize();
-
 	Step1_VssPaths      (paths::szStep1_VssDir);
 	Step2_CollectPaths  (paths::szStep1_VssDir, paths::szStep2_Paths, paths::szStep2_SkippedPaths);
 	//Step3_CollectAllInfo(paths::szStep2_Paths,  paths::szStep3_Info);
 
 	//SDataVect vect;
+
+	printf("\n>> ");
+	system("TIME/T");
 }
 
 
