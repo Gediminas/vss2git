@@ -10,7 +10,7 @@ namespace vss
 	void list_all_files(LPCTSTR szOutputFile);
 	void list_file_versions(LPCTSTR szVssFile, LPCTSTR szOutputFile);
 
-	void get_file(LPCTSTR szVssFile, int nVssFileVersion, LPCTSTR szOutputFile);
+	void get_file(LPCTSTR szVssFile, int nVssFileVersion, LPCTSTR szWorkingDir, LPCTSTR szOutputFile);
 };
 //namespace vss
 

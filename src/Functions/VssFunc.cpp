@@ -51,16 +51,19 @@ void vss::list_file_versions(LPCTSTR szVssFile, LPCTSTR szOutputFile)
 	system(sCommand);
 }
 
-void vss::get_file(LPCTSTR szVssFile, int nVssFileVersion, LPCTSTR szOutputFile)
+void vss::get_file(LPCTSTR szVssFile, int nVssFileVersion, LPCTSTR szWorkingDir, LPCTSTR szOutputFile)
 {
-	system(ss_exe + " Project");
-	getchar();
+	CString sTo = szVssFile;
+	sTo.Replace("$", szWorkingDir);
+	sTo.Replace("/", "\\");
+	const int nCut = sTo.ReverseFind('\\');
+	ASSERT(0 < nCut);
+	sTo = sTo.Left(nCut);
 
-	system(ss_exe + " Workfold");
-	getchar();
+	file::CreateDirectoryRecursive(sTo, NULL);
 
 	CString sCommand;
-	sCommand.Format(FormatStr("%s Get \"%s\" -V%d -O%s", ss_exe, szVssFile, nVssFileVersion, szOutputFile));
+	//sCommand.Format(FormatStr("%s Get \"%s\" -V%d >> %s", ss_exe, szVssFile, nVssFileVersion, szOutputFile));
+	sCommand.Format(FormatStr("%s Get \"%s\" -V%d -GL\"%s\" >> %s", ss_exe, szVssFile, nVssFileVersion, sTo, szOutputFile));
 	system(sCommand);
-	getchar();
 }

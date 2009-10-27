@@ -22,10 +22,11 @@ static char THIS_FILE[]=__FILE__;
 class CImportGroupData
 {
 public:
-	CImportGroupData(int nCount, LPCTSTR szOutputFile)
-	: m_nCurrentLine(1),
+	CImportGroupData(int nCount, LPCTSTR szWorkingDir, LPCTSTR szOutputFile)
+	: m_nCurrentLine(0),
 	  m_nItem(0),
 	  m_nCount(nCount),
+	  m_sWorkingDir(szWorkingDir),
 	  m_sOutputFile(szOutputFile)
 	{
 		m_pFileProgress = new CStdioFile;
@@ -39,12 +40,16 @@ public:
 			}
 			else
 			{
-				ASSERT(FALSE); //Corrupted file???
+				//ASSERT(FALSE); //Corrupted file???
 			}
 			m_pFileProgress->Close();
 		}
 
 		VERIFY(m_pFileProgress->Open(paths::szImportProgress, CFile::modeCreate | CFile::modeWrite | CFile::shareDenyNone, NULL));
+
+		//GetCurrentDirectory(2000, m_sSysWorkingDir.GetBufferSetLength(2000));
+		//SetCurrentDirectory(paths::szWorkingDir);
+		//GetCurrentDirectory(2000, m_sVssWorkingDir.GetBufferSetLength(2000));
 	}
 
 	~CImportGroupData()
@@ -62,15 +67,19 @@ public:
 		}
 		++ m_nCurrentLine;
 
+		//SetCurrentDirectory(m_sSysWorkingDir);
 		system(FormatStr("ECHO ********** >> %s", m_sOutputFile));
 		system(FormatStr("ECHO %s %s >> %s", pGroupData->time, pGroupData->user, m_sOutputFile));
+		//SetCurrentDirectory(m_sVssWorkingDir);
 
 		for (SDataVect::iterator it = pGroupData->data_vect->begin(); pGroupData->data_vect->end() != it; ++ it)
 		{
 			SData *&data = (*it);
-			vss::get_file(data->file, data->version, m_sOutputFile);
+			vss::get_file(data->file, data->version, m_sWorkingDir, m_sOutputFile);
 		}
 
+		//printf(FormatStr("Commit %d done...\n", m_nCurrentLine));
+		//getchar();
 
 		m_pFileProgress->SetLength(0);
 		m_pFileProgress->WriteString(FormatStr("%d\n", m_nCurrentLine));
@@ -83,6 +92,8 @@ public:
 		m_pFileProgress->Close();
 		delete m_pFileProgress;
 		m_pFileProgress = NULL;
+
+		//SetCurrentDirectory(m_sSysWorkingDir);
 	}
 
 private:
@@ -91,6 +102,9 @@ private:
 	int m_nCount;
 	CStdioFile *m_pFileProgress;
 	CString m_sOutputFile;
+	CString m_sWorkingDir;
+	//CString m_sSysWorkingDir;
+	//CString m_sVssWorkingDir;
 };
 
 
@@ -547,9 +561,9 @@ static bool BuildGroupDataVect(SDataVect &vect_for_auto_delete, SGroupDataVect &
 	return true;
 }
 
-static bool Import(SGroupDataVect &group_vect, LPCTSTR szOutputFile)
+static bool Import(SGroupDataVect &group_vect, LPCTSTR szWorkingDir, LPCTSTR szOutputFile)
 {
-	CImportGroupData import(group_vect.size(), szOutputFile);
+	CImportGroupData import(group_vect.size(), szWorkingDir, szOutputFile);
 	std::for_each(group_vect.begin(), group_vect.end(), import);
 	import.Destroy();
 		
@@ -566,22 +580,25 @@ inline bool CheckExt(const CString &sLine, LPCTSTR szExt)
 
 
 
-static void Initialize()
+static void Initialize(LPCTSTR szTmpDir, LPCTSTR szWorkingDir)
 {
 	printf("\nINIT");
 	printf("\n>> ");
 	system("TIME/T");
 
-	printf(">> create folder '%s'\n", paths::szWorkingDir);
-
-	::CreateDirectory(paths::szTmpDir, NULL);
-	::CreateDirectory(paths::szWorkingDir, NULL);
+	printf(">> create folder '%s'\n", szWorkingDir);
+	::CreateDirectory(szTmpDir, NULL);
+	file::CreateDirectoryRecursive(szTmpDir, NULL);
+	::CreateDirectory(szWorkingDir, NULL);
+	file::CreateDirectoryRecursive(szWorkingDir, NULL);
 	printf("\n");
 
-	vss::init_root_workfolder(paths::szWorkingDir);
+	CString sGitIgnore(szWorkingDir);
+	sGitIgnore += "/.gitignore";
+	::DeleteFile(sGitIgnore);
+	system(FormatStr("ECHO *.scc >> %s", sGitIgnore));
 
-	//printf(">> generate - 'history.txt' (for StdAfx.h)\n");
-	//system(ss + " History $/Wood/MatrixKozijn/StdAfx.h >>..\\tmp\\history.txt");
+	vss::init_root_workfolder(szWorkingDir);
 }
 
 static void Step1_VssPaths(LPCTSTR szOutputFile)
@@ -729,13 +746,16 @@ static void Step3_GroupInfo(LPCTSTR szInputFile, LPCTSTR szOutputFile)
 		}
 
 		printf(FormatStr(">> file+version count: %d\n", vect.size()));
-		system(FormatStr("ECHO FILE+VERSION count: %7d >> %s", vect.size(), paths::szCounters));
+		system(FormatStr("ECHO Step3 FILE+VERSION count: %7d >> %s", vect.size(), paths::szCounters));
 
 		printf(">> sorting vector by date+user\n");
 		std::sort(vect.begin(), vect.end(), data::compare_by_time_user);
 
 		printf(">> grouping vector by date+user\n");
 		GroupDataVect(vect, group_vect);
+
+		system(FormatStr("ECHO Step3 estimated VSS GET    count: %7d >> %s", vect.size(), paths::szCounters));
+		system(FormatStr("ECHO Step3 estimated GIT COMMIT count: %7d >> %s", group_vect.size(),           paths::szCounters));
 
 		printf(">> storing data vector\n");
 		if (!StoreDataVect(group_vect, szOutputFile))
@@ -750,7 +770,7 @@ static void Step3_GroupInfo(LPCTSTR szInputFile, LPCTSTR szOutputFile)
 };
 
 
-static void Step4_Import(LPCTSTR szInputFile, LPCTSTR szOutputFile)
+static void Step4_Import(LPCTSTR szInputFile, LPCTSTR szOutputFile, LPCTSTR szWorkingDir)
 {
 	printf("\nSTEP4");
 	printf("\n>> ");
@@ -771,29 +791,37 @@ static void Step4_Import(LPCTSTR szInputFile, LPCTSTR szOutputFile)
 
 		printf(FormatStr(">> estimated VSS GET    count: %7d\n",  vect_for_auto_delete.size()));
 		printf(FormatStr(">> estimated GIT COMMIT count: %7d\n",  group_vect.size()));
-		system(FormatStr("ECHO estimated VSS GET    count: %7d >> %s", vect_for_auto_delete.size(), paths::szCounters));
-		system(FormatStr("ECHO estimated GIT COMMIT count: %7d >> %s", group_vect.size(),           paths::szCounters));
+		system(FormatStr("ECHO Step4 estimated VSS GET    count: %7d >> %s", vect_for_auto_delete.size(), paths::szCounters));
+		system(FormatStr("ECHO Step4 estimated GIT COMMIT count: %7d >> %s", group_vect.size(),           paths::szCounters));
 
 		printf(">> IMPORTING\n");
-		if (!Import(group_vect, szOutputFile))
+		if (!Import(group_vect, szWorkingDir, szOutputFile))
 		{
 			printf(">> IMPORT FAILED\n");
 			getchar();
 			exit(1);
 		}
 
-		//file::MarkJobDone(szOutputFile);
+		file::MarkJobDone(szOutputFile);
 	}
 };
 
 
 void processor::Run()
 {
-	Initialize();
+	CString sOriginalFolder, sVssWorkingDir;
+	GetCurrentDirectory(2000, sOriginalFolder.GetBufferSetLength(2000));
+	
+	Initialize(paths::szTmpDir, paths::szWorkingDir);
+
+	SetCurrentDirectory(paths::szWorkingDir);
+	GetCurrentDirectory(2000, sVssWorkingDir.GetBufferSetLength(2000));
+	SetCurrentDirectory(sOriginalFolder);
+
 	Step1_VssPaths    (paths::szStep1_VssDir);
-	Step2_CollectInfo (paths::szStep1_VssDir, paths::szStep2_Paths, paths::szStep2_SkippedPaths);
-	Step3_GroupInfo   (paths::szStep2_Paths,  paths::szStep3_Grouped);
-	Step4_Import      (paths::szStep3_Grouped,  paths::szStep4_Import);
+	Step2_CollectInfo (paths::szStep1_VssDir,  paths::szStep2_Paths, paths::szStep2_SkippedPaths);
+	Step3_GroupInfo   (paths::szStep2_Paths,   paths::szStep3_Grouped);
+	Step4_Import      (paths::szStep3_Grouped, paths::szStep4_Import, sVssWorkingDir);
 
 
 	printf("\n>> ");

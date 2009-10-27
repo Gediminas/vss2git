@@ -6,6 +6,8 @@
 namespace file
 {
 	bool DoesFileExist(LPCTSTR szFilePath);
+	bool CreateDirectoryRecursive(const CString& sDirName, LPSECURITY_ATTRIBUTES lpSecurityAttributes);
+	bool DeleteRecursiveAll(LPCSTR sPath);
 	
 	bool StartJob(LPCTSTR szFilePath);
 	void CleanupJob(LPCTSTR szFilePath);
