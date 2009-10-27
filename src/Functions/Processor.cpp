@@ -354,7 +354,7 @@ static bool BuildDataVect(SDataVect &vect, LPCTSTR szInputFile)
 	return true;
 }
 
-static bool StoreDataVect(const SDataVect &vect, LPCTSTR szOutputFile)
+static bool StoreDataVect(const SGroupDataVect &group_vect, LPCTSTR szOutputFile)
 {
 	CStdioFile file;
 	CFileException fe;
@@ -368,8 +368,8 @@ static bool StoreDataVect(const SDataVect &vect, LPCTSTR szOutputFile)
 
 	try
 	{
-		CStoreData store(file, vect.size());
-		std::for_each(vect.begin(), vect.end(), store);
+		CStoreGroupData store(file, group_vect.size());
+		std::for_each(group_vect.begin(), group_vect.end(), store);
 	}
 	catch(CFileException *e)
 	{
@@ -575,7 +575,7 @@ static void Step3_GroupInfo(LPCTSTR szInputFile, LPCTSTR szOutputFile)
 		}
 
 		printf(">> storing data vector\n");
-		if (!StoreDataVect(vect, szOutputFile))
+		if (!StoreDataVect(group_vect, szOutputFile))
 		{
 			printf(">> store vector failed\n");
 			getchar();

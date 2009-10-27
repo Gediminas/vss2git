@@ -99,11 +99,12 @@ SGroupDataVect::SGroupDataVect()
 
 SGroupDataVect::~SGroupDataVect()
 {
-
+	TDeletor<SGroupData> del;
+	std::for_each(begin(), end(), del);
 }
 
 
-CStoreData::CStoreData(CStdioFile &file, int nProgressSize)
+CStoreGroupData::CStoreGroupData(CStdioFile &file, int nProgressSize)
 : m_file(file),
   m_nProgressSize(nProgressSize),
   m_nProgressCurrent(0)
@@ -111,24 +112,27 @@ CStoreData::CStoreData(CStdioFile &file, int nProgressSize)
 
 }
 	
-CStoreData::~CStoreData()
+CStoreGroupData::~CStoreGroupData()
 {
 
 }
 	
-void CStoreData::operator () (SData* pData)
+void CStoreGroupData::operator () (SGroupData* pGroupData)
 {
-	CString s;
-	s += pData->time;
-	s += "\t";
-	s += pData->user;
-	s += "\t";
-	s += FormatStr("%d", pData->version);
-	s += "\t";
-	s += pData->file;
-	s += "\n";
+	ASSERT(pGroupData);
+	ASSERT(pGroupData->data_vect);
 
-	m_file.WriteString(s);
+	m_file.WriteString("**********\n");
+	m_file.WriteString(pGroupData->time + "\n");
+	m_file.WriteString(pGroupData->user + "\n");
+
+	for (SDataVect::iterator it = pGroupData->data_vect->begin(); pGroupData->data_vect->end() != it; ++ it)
+	{
+		SData *&data = (*it);
+		m_file.WriteString(FormatStr("%d\n%s\n", data->version, data->file));
+	}
+
+	m_file.WriteString("\n");
 
 	++ m_nProgressCurrent;
 	if (0 == m_nProgressCurrent % 1000)
@@ -140,7 +144,8 @@ void CStoreData::operator () (SData* pData)
 
 
 CDataVectGrouping::CDataVectGrouping(SGroupDataVect &group_vect)
-: m_group_vect(group_vect)
+: m_group_vect(group_vect),
+  m_pLastGroupData(NULL)
 {
 	ASSERT(0 == m_group_vect.size());
 
@@ -155,7 +160,26 @@ void CDataVectGrouping::operator () (SData* pData)
 {
 	ASSERT_POINTER(pData, SData);
 
-	//if (sLastUser)
-	//pData->time;
+	const CString sLastUser = (NULL != m_pLastGroupData) ? m_pLastGroupData->user : "";
+	const CString sLastTime = (NULL != m_pLastGroupData) ? m_pLastGroupData->time : "";
+	const CString sLastDate = sLastTime.Left(10);
+	const CString sThisDate = pData->time.Left(10);
+	
+
+	if (sLastUser != pData->user || sLastDate != sThisDate)
+	{
+		ValidateGroup(m_pLastGroupData);
+		m_group_vect.push_back(m_pLastGroupData = new SGroupData);
+	}
+
+	ASSERT(NULL != m_pLastGroupData->data_vect);
+	
+	m_pLastGroupData->time = pData->time;
+	m_pLastGroupData->user = pData->user;
+	m_pLastGroupData->data_vect->push_back(pData);
 }
 
+void CDataVectGrouping::ValidateGroup(SGroupData *pGroupData)
+{
+
+}

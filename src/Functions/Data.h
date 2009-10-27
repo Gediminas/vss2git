@@ -27,7 +27,7 @@ public:
 
 struct SGroupData
 {
-	CString    date_time;
+	CString    time;
 	CString    user;
 	SDataVect *data_vect;
 
@@ -50,19 +50,22 @@ public:
 	void operator () (SData* pData);
 	~CDataVectGrouping();
 
+	void ValidateGroup(SGroupData *pGroupData);
+
 private:
 	CString sLastTime;
 	CString sLastUser;
+	SGroupData *m_pLastGroupData;
 	SGroupDataVect &m_group_vect;
 };
 
 
-class CStoreData
+class CStoreGroupData
 {
 public:
-	CStoreData(CStdioFile &file, int nProgressSize);
-	~CStoreData();
-	void operator () (SData* pData);
+	CStoreGroupData(CStdioFile &file, int nProgressSize);
+	~CStoreGroupData();
+	void operator () (SGroupData* pGroupData);
 
 private:
 	CStdioFile &m_file;
