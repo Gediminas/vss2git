@@ -24,7 +24,7 @@ bool file::DoesFileExist(LPCTSTR szFilePath)
 
 bool file::StartJob(LPCTSTR szFilePath)
 {
-	printf(">> generate '%s'\n", szFilePath);
+	printf(">> generating '%s'\n", szFilePath);
 	
 	if (!file::DoesFileExist(szFilePath) || !file::DoesFileExist(CString(szFilePath) + ".DONE"))
 	{

@@ -216,117 +216,127 @@ static bool BuildDataVect(SDataVect &vect, LPCTSTR szInputFile)
 	{
 		const DWORD dwFileLength = fileInput.GetLength();
 
-		CString sLine;
+		bool bAdd = false;
+		CString sKey, sParam;
 		SData *pData = NULL;
 
-		while (fileInput.ReadString(sLine))
+		while (fileInput.ReadString(sKey))
 		{
-			if (sLine.IsEmpty())
+			if (sKey.IsEmpty())
 			{
 				continue;
 			}
 
-			if ("**********" == sLine)
+			if ("**********" == sKey)
 			{
-				//ASSERT(NULL == pData || *vect.end() == pData); //is asserts, previous was not processed
-				pData = new SData;
+				if (bAdd)
+				{
+					ASSERT_POINTER(pData, SData);
+					ASSERT(0 < pData->version);
 
-				printf("\r>> %d%%", 100 * fileInput.GetPosition() / dwFileLength);
-			}
-			else if (0 == sLine.Find("ACTION_"))
-			{
-				ASSERT(NULL != pData);
-				ASSERT(0 < pData->version);
-				ASSERT(INT_MAX != pData->version);
+					vect.push_back(pData);
+					
+					bAdd = false;
 
-				if ("ACTION_COMMITED" == sLine)
-				{
-					ASSERT(1 < pData->version);
-					vect.push_back(pData);
-				}
-				else if ("ACTION_CREATED" == sLine)
-				{
-					ASSERT(1 == pData->version);
-					vect.push_back(pData);
-				}
-				else if ("ACTION_BRANCHED" == sLine)
-				{
-					delete pData; //skip
-					pData = NULL;
-				}
-				else if ("ACTION_LABELED" == sLine)
-				{
-					delete pData; //skip
-					pData = NULL;
+					if (1 == pData->version)
+					{
+						printf("\r>> %d%%", 100 * fileInput.GetPosition() / dwFileLength);
+					}
 				}
 				else
 				{
-					printf(">> ERROR: Unrecognized action token '%s'\n", sLine);
-					ASSERT(FALSE);
-
 					delete pData;
-					pData = NULL;
+				}
+
+				pData = new SData;
+			}
+			else if (0 == sKey.Find("ACTION_"))
+			{
+				ASSERT(!bAdd);
+				ASSERT_POINTER(pData, SData);
+				ASSERT(0 < pData->version);
+				ASSERT(INT_MAX != pData->version);
+
+				if ("ACTION_COMMITED" == sKey)
+				{
+					ASSERT(1 < pData->version);
+					bAdd = true;
+				}
+				else if ("ACTION_CREATED" == sKey)
+				{
+					ASSERT(1 == pData->version);
+					bAdd = true;
+				}
+				else if ("ACTION_BRANCHED" == sKey)
+				{
+					//skip
+				}
+				else if ("ACTION_LABELED" == sKey)
+				{
+					//skip
+				}
+				else
+				{
+					//skip
+					printf(">> ERROR: Unrecognized action '%s'\n", sKey);
+					ASSERT(FALSE);
 				}
 			}
 			else
 			{
-				if ("FILE" == sLine)
+				ASSERT_POINTER(pData, SData);
+				fileInput.ReadString(sParam);
+				ASSERT(!sParam.IsEmpty());
+
+				if ("FILE" == sKey)
 				{
-					ASSERT(NULL != pData);
-					fileInput.ReadString(sLine);
-					pData->file = sLine;
+					pData->file = sParam;
 				}
-				else if ("VERSION" == sLine)
+				else if ("VERSION" == sKey)
 				{
-					ASSERT(NULL != pData);
-					fileInput.ReadString(sLine);
-					pData->version = atoi(sLine);
+					ASSERT(0 == pData->version);
+					pData->version = atoi(sParam);
+					ASSERT(0 < pData->version);
 				}
-				else if ("USER" == sLine)
+				else if ("USER" == sKey)
 				{
-					ASSERT(NULL != pData);
-					fileInput.ReadString(sLine);
-					pData->user = sLine;
+					pData->user = sParam;
 				}
-				else if ("TIME" == sLine)
+				else if ("TIME" == sKey)
 				{
-					ASSERT(NULL != pData);
-					fileInput.ReadString(sLine);
-					pData->time = sLine;
+					pData->time = sParam;
 				}
-				else if ("LABEL" == sLine)
+				else if ("LABEL" == sKey)
 				{
-					ASSERT(NULL != pData);
-					fileInput.ReadString(sLine);
-					pData->label = sLine;
+					pData->label = sParam;
 				}
-				else if ("LABEL_COMMENT" == sLine)
+				else if ("LABEL_COMMENT" == sKey)
 				{
-					ASSERT(NULL != pData);
-					fileInput.ReadString(sLine);
-					pData->label_comment = sLine;
+					pData->label_comment = sParam;
 				}
-				else if ("COMMENT" == sLine)
+				else if ("COMMENT" == sKey)
 				{
-					fileInput.ReadString(sLine);
-					
-					if (NULL != pData)
-					{
-						pData->comment = sLine;
-					}
+					pData->comment = sParam;
 				}
-				else if ("TRASH" == sLine)
+				else if ("TRASH" == sKey)
 				{
-					ASSERT(NULL != pData);
-					fileInput.ReadString(sLine);
+					//skip
 				}
 				else
 				{
-					ASSERT(NULL != pData);
-					printf(">> ERROR: Unrecognized token '%s'\n", sLine);
+					//skip
+					printf(">> ERROR: Unrecognized token '%s' -> '%s'\n", sKey, sParam);
 					ASSERT(FALSE);
 				}
 			}
+		}
+
+		if (bAdd)
+		{
+			ASSERT_POINTER(pData, SData);
+			ASSERT(0 < pData->version);
+
+			vect.push_back(pData);
 		}
 	}
 	catch(CFileException *e)
@@ -340,8 +350,42 @@ static bool BuildDataVect(SDataVect &vect, LPCTSTR szInputFile)
 	}
 
 	fileInput.Close();
+	printf("\r>> finished\n");
 	return true;
 }
+
+static bool StoreDataVect(const SDataVect &vect, LPCTSTR szOutputFile)
+{
+	CStdioFile file;
+	CFileException fe;
+
+	if (!file.Open(szOutputFile, CFile::modeCreate | CFile::modeWrite | CFile::shareDenyNone, &fe))
+	{
+		printf(">> input file error\n");
+		getchar();
+		exit(1);
+	}
+
+	try
+	{
+		CStoreData store(file, vect.size());
+		std::for_each(vect.begin(), vect.end(), store);
+	}
+	catch(CFileException *e)
+	{
+		e->ReportError();
+		ASSERT(FALSE);
+		e->Delete();
+
+		file.Close();
+		return false;
+	}
+
+	file.Close();
+	printf("\r>> finished\n");
+	return true;
+}
+
 
 inline bool CheckExt(const CString &sLine, LPCTSTR szExt)
 {
@@ -501,32 +545,30 @@ static void Step3_GroupInfo(LPCTSTR szInputFile, LPCTSTR szOutputFile)
 	if (!file::StartJob(szOutputFile))
 	{
 		SDataVect vect;
-		BuildDataVect(vect, szInputFile);
 
-		CStdioFile fileOutput;
-		CFileException fe;
-
-		if (!fileOutput.Open(szOutputFile, CFile::modeCreate | CFile::modeWrite | CFile::shareDenyNone, &fe))
+		printf(">> building data vector\n");
+		if (!BuildDataVect(vect, szInputFile))
 		{
-			printf(">> output file error\n");
+			printf(">> failed\n");
 			getchar();
 			exit(1);
-		
 		}
 
-		try
+		printf(FormatStr(">> file+version count: %d\n", vect.size()));
+
+		printf(">> sorting vector by date+user\n");
+		std::sort(vect.begin(), vect.end(), data::compare_by_time_user);
+
+
+		printf(">> storing data vector\n");
+		if (!StoreDataVect(vect, szOutputFile))
 		{
-			fileOutput.WriteString(FormatStr("Total file+version count: %d\n", vect.size()));
-			//file::MarkJobDone(szOutputFile);
-		}
-		catch(CFileException *e)
-		{
-			e->ReportError();
-			ASSERT(FALSE);
-			e->Delete();
+			printf(">> store vector failed\n");
+			getchar();
+			exit(1);
 		}
 
-		fileOutput.Close();
+		//file::MarkJobDone(szOutputFile);
 	}
 };
 

@@ -24,5 +24,25 @@ public:
 };
 
 
+class CStoreData
+{
+public:
+	CStoreData(CStdioFile &file, int nProgressSize);
+	~CStoreData();
+	operator () (SData* pData);
+
+private:
+	CStdioFile &m_file;
+	int         m_nProgressSize;
+	int         m_nProgressCurrent;
+};
+
+
+namespace data
+{
+	int compare_by_time_user(const SData* x, const SData* y);
+};
+//namespace data
+
 
 #endif //__Data_H__
