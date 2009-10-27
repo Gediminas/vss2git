@@ -181,19 +181,27 @@ static void AddFile(LPCTSTR szFilePath, CStdioFile &output_file)
 	fileDump.Close();
 }
 
+static void AddSkippedFile(LPCTSTR szFilePath, CStdioFile &output_file)
+{
+	output_file.WriteString(szFilePath);
+	output_file.WriteString("\n");
+}
+
 static void Step1_VssPaths(LPCTSTR szOutputFile)
 {
 	printf("\nSTEP1\n");
 	vss::list_all_files(szOutputFile);
 }
 
-static void Step2_CollectPaths(LPCTSTR szInputFile, LPCTSTR szOutputFile)
+static void Step2_CollectPaths(LPCTSTR szInputFile, LPCTSTR szOutputFile, LPCTSTR szOutputSkippedFile)
 {
 	printf("\nSTEP2\n");
 
 	if (!file::StartJob(szOutputFile))
 	{
-		CStdioFile fileI, fileO;
+		::DeleteFile(szOutputSkippedFile);
+
+		CStdioFile fileI, fileO, fileSkipped;
 		CFileException fe;
 
 		if (!fileI.Open(szInputFile, CFile::modeRead | CFile::shareDenyWrite, &fe))
@@ -210,10 +218,17 @@ static void Step2_CollectPaths(LPCTSTR szInputFile, LPCTSTR szOutputFile)
 		
 		}
 
-		const DWORD dwFileLength = fileI.GetLength();
+		if (!fileSkipped.Open(szOutputSkippedFile, CFile::modeCreate | CFile::modeWrite | CFile::shareDenyNone, &fe))
+		{
+			printf(">> output 'skipped' file error\n");
+			exit(1);
+		
+		}
 
-		CString sLine;
-		CString sCurrentFolder;
+		const DWORD dwFileLength = fileI.GetLength();
+		CString sClearText(' ', 70);
+
+		CString sLine, sCurrentFolder, sLogDir;
 
 		while (fileI.ReadString(sLine))
 		{
@@ -227,17 +242,16 @@ static void Step2_CollectPaths(LPCTSTR szInputFile, LPCTSTR szOutputFile)
 				//FOLDER 'CHANGED'
 				sCurrentFolder = sLine;
 
-				while (':' != sCurrentFolder[sCurrentFolder.GetLength()-1])
+				while (':' != sCurrentFolder[sCurrentFolder.GetLength()-1] && fileI.ReadString(sLine))
 				{
-					if (!fileI.ReadString(sLine))
+					if (0 == sLine.Find("No items found under $/"))
 					{
-						ASSERT(FALSE);
-						return;
+						sCurrentFolder.Empty();
+						continue;
 					}
 
 					if (sCurrentFolder.GetLength() < 79)
 					{
-						//ASSERT(sCurrentFolder.GetLength() == 80);
 						sCurrentFolder += " ";
 					}
 
@@ -248,17 +262,27 @@ static void Step2_CollectPaths(LPCTSTR szInputFile, LPCTSTR szOutputFile)
 				sCurrentFolder.Delete(sCurrentFolder.GetLength()-1); //delete ':'
 
 				fileO.Flush();
-				printf("\r>> %d%%", 100 * fileI.GetPosition() / dwFileLength);
+				fileSkipped.Flush();
+
+				sLogDir.Format("...%s", sCurrentFolder.Right(min(sCurrentFolder.GetLength(), 50)));
+
+				printf(sClearText);
+				printf("\r>> %.1f%% (%s)", 100.0 * fileI.GetPosition() / dwFileLength, sLogDir);
 			}
 			else if (-1 != sLine.Find(".cpp") ||
 					(-1 != sLine.Find(".h"))   )
 			{
 				AddFile(sCurrentFolder + "/" + sLine, fileO);
 			}
+			else if ('$' != sLine[0])
+			{
+				AddSkippedFile(sCurrentFolder + "/" + sLine, fileSkipped);
+			}
 		}
 
 		fileI.Close();
 		fileO.Close();
+		fileSkipped.Close();
 		file::MarkJobDone(szOutputFile);
 	}
 };
@@ -329,7 +353,7 @@ void processor::Run()
 	Initialize();
 
 	Step1_VssPaths      (paths::szStep1_VssDir);
-	Step2_CollectPaths  (paths::szStep1_VssDir, paths::szStep2_Paths);
+	Step2_CollectPaths  (paths::szStep1_VssDir, paths::szStep2_Paths, paths::szStep2_SkippedPaths);
 	//Step3_CollectAllInfo(paths::szStep2_Paths,  paths::szStep3_Info);
 
 	//SDataVect vect;
