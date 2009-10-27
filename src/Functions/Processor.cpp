@@ -200,10 +200,147 @@ static void AddFileVersions(LPCTSTR szFilePath, CStdioFile &output_file)
 	fileDump.Close();
 }
 
-static void AddSkippedFile(LPCTSTR szFilePath, CStdioFile &output_file)
+static bool BuildDataVect(SDataVect &vect, LPCTSTR szInputFile)
 {
-	output_file.WriteString(szFilePath);
-	output_file.WriteString("\n");
+	CStdioFile fileInput, fileOutput;
+	CFileException fe;
+
+	if (!fileInput.Open(szInputFile, CFile::modeRead | CFile::shareDenyWrite, &fe))
+	{
+		printf(">> input file error\n");
+		getchar();
+		exit(1);
+	}
+
+	try
+	{
+		const DWORD dwFileLength = fileInput.GetLength();
+
+		CString sLine;
+		SData *pData = NULL;
+
+		while (fileInput.ReadString(sLine))
+		{
+			if (sLine.IsEmpty())
+			{
+				continue;
+			}
+
+			if ("**********" == sLine)
+			{
+				//ASSERT(NULL == pData || *vect.end() == pData); //is asserts, previous was not processed
+				pData = new SData;
+
+				printf("\r>> %d%%", 100 * fileInput.GetPosition() / dwFileLength);
+			}
+			else if (0 == sLine.Find("ACTION_"))
+			{
+				ASSERT(NULL != pData);
+				ASSERT(0 < pData->version);
+				ASSERT(INT_MAX != pData->version);
+
+				if ("ACTION_COMMITED" == sLine)
+				{
+					ASSERT(1 < pData->version);
+					vect.push_back(pData);
+				}
+				else if ("ACTION_CREATED" == sLine)
+				{
+					ASSERT(1 == pData->version);
+					vect.push_back(pData);
+				}
+				else if ("ACTION_BRANCHED" == sLine)
+				{
+					delete pData; //skip
+					pData = NULL;
+				}
+				else if ("ACTION_LABELED" == sLine)
+				{
+					delete pData; //skip
+					pData = NULL;
+				}
+				else
+				{
+					printf(">> ERROR: Unrecognized action token '%s'\n", sLine);
+					ASSERT(FALSE);
+
+					delete pData;
+					pData = NULL;
+				}
+			}
+			else
+			{
+				if ("FILE" == sLine)
+				{
+					ASSERT(NULL != pData);
+					fileInput.ReadString(sLine);
+					pData->file = sLine;
+				}
+				else if ("VERSION" == sLine)
+				{
+					ASSERT(NULL != pData);
+					fileInput.ReadString(sLine);
+					pData->version = atoi(sLine);
+				}
+				else if ("USER" == sLine)
+				{
+					ASSERT(NULL != pData);
+					fileInput.ReadString(sLine);
+					pData->user = sLine;
+				}
+				else if ("TIME" == sLine)
+				{
+					ASSERT(NULL != pData);
+					fileInput.ReadString(sLine);
+					pData->time = sLine;
+				}
+				else if ("LABEL" == sLine)
+				{
+					ASSERT(NULL != pData);
+					fileInput.ReadString(sLine);
+					pData->label = sLine;
+				}
+				else if ("LABEL_COMMENT" == sLine)
+				{
+					ASSERT(NULL != pData);
+					fileInput.ReadString(sLine);
+					pData->label_comment = sLine;
+				}
+				else if ("COMMENT" == sLine)
+				{
+					fileInput.ReadString(sLine);
+					
+					if (NULL != pData)
+					{
+						pData->comment = sLine;
+					}
+				}
+				else if ("TRASH" == sLine)
+				{
+					ASSERT(NULL != pData);
+					fileInput.ReadString(sLine);
+				}
+				else
+				{
+					ASSERT(NULL != pData);
+					printf(">> ERROR: Unrecognized token '%s'\n", sLine);
+					ASSERT(FALSE);
+				}
+			}
+		}
+	}
+	catch(CFileException *e)
+	{
+		e->ReportError();
+		ASSERT(FALSE);
+		e->Delete();
+
+		fileInput.Close();
+		return false;
+	}
+
+	fileInput.Close();
+	return true;
 }
 
 inline bool CheckExt(const CString &sLine, LPCTSTR szExt)
@@ -282,6 +419,7 @@ static void Step2_CollectInfo(LPCTSTR szInputFile, LPCTSTR szOutputFile, LPCTSTR
 		sClearText = "\r" + sClearText;
 
 		CString sLine, sCurrentFolder, sLogDir;
+		int nSkippedFileCount = 0;
 
 		while (fileInput.ReadString(sLine))
 		{
@@ -320,10 +458,7 @@ static void Step2_CollectInfo(LPCTSTR szInputFile, LPCTSTR szOutputFile, LPCTSTR
 			}
 			else if ('$' != sLine[0])
 			{
-				if (CheckExt(sLine, ".h")   ||
-					CheckExt(sLine, ".cpp") ||
-					CheckExt(sLine, ".c")   ||
-					CheckExt(sLine, ".hpp")  )
+				if (CheckExt(sLine, ".h") || CheckExt(sLine, ".cpp"))
 				{
 					ASSERT(-1 == sLine.Find("No items found under $/"));
 					AddFileVersions(sCurrentFolder + "/" + sLine, fileOutput);
@@ -334,9 +469,15 @@ static void Step2_CollectInfo(LPCTSTR szInputFile, LPCTSTR szOutputFile, LPCTSTR
 					{
 						sCurrentFolder.Empty();
 					}
+					if (-1 != sLine.Find(" item(s)"))
+					{
+						fileSkipped.WriteString(FormatStr("\n\n>> SKIPPED FILES: %d\n", nSkippedFileCount));
+						fileSkipped.WriteString("TOTAL FILES: " + sLine + "\n");
+					}
 					else
 					{
-						AddSkippedFile(sCurrentFolder + "/" + sLine, fileSkipped);
+						fileSkipped.WriteString(sCurrentFolder + "/" + sLine + "\n");
+						++ nSkippedFileCount;
 					}
 				}
 			}
@@ -350,6 +491,7 @@ static void Step2_CollectInfo(LPCTSTR szInputFile, LPCTSTR szOutputFile, LPCTSTR
 	}
 };
 
+
 static void Step3_GroupInfo(LPCTSTR szInputFile, LPCTSTR szOutputFile)
 {
 	printf("\nSTEP3");
@@ -358,15 +500,11 @@ static void Step3_GroupInfo(LPCTSTR szInputFile, LPCTSTR szOutputFile)
 
 	if (!file::StartJob(szOutputFile))
 	{
-		CStdioFile fileInput, fileOutput, fileSkipped;
-		CFileException fe;
+		SDataVect vect;
+		BuildDataVect(vect, szInputFile);
 
-		if (!fileInput.Open(szInputFile, CFile::modeRead | CFile::shareDenyWrite, &fe))
-		{
-			printf(">> input file error\n");
-			getchar();
-			exit(1);
-		}
+		CStdioFile fileOutput;
+		CFileException fe;
 
 		if (!fileOutput.Open(szOutputFile, CFile::modeCreate | CFile::modeWrite | CFile::shareDenyNone, &fe))
 		{
@@ -376,115 +514,19 @@ static void Step3_GroupInfo(LPCTSTR szInputFile, LPCTSTR szOutputFile)
 		
 		}
 
-		const DWORD dwFileLength = fileInput.GetLength();
-
-		CString sLine;
-//		SData *pData = NULL;
-
-		while (fileInput.ReadString(sLine))
+		try
 		{
-			if (sLine.IsEmpty())
-			{
-				continue;
-			}
-
-			if ("**********" == sLine)
-			{
-				//ASSERT(NULL == pData); //is asserts, previous was not processed
-				//pData = new SData;
-
-				fileOutput.Flush();
-
-				printf("\r>> %d%%", 100 * fileInput.GetPosition() / dwFileLength);
-			}
-			else if ("FILE" == sLine)
-			{
-				fileOutput.WriteString("\n");
-				fileOutput.WriteString("F:");
-				fileInput.ReadString(sLine);
-				fileOutput.WriteString(sLine + "\n");
-			}
-			else if ("VERSION" == sLine)
-			{
-				fileOutput.WriteString("v:");
-				fileInput.ReadString(sLine);
-				fileOutput.WriteString(sLine + "\n");
-			}
-			else if ("USER" == sLine)
-			{
-				fileOutput.WriteString("U:");
-				fileInput.ReadString(sLine);
-				fileOutput.WriteString(sLine + "\n");
-			}
-			else if ("TIME" == sLine)
-			{
-				fileOutput.WriteString("T:");
-				fileInput.ReadString(sLine);
-				fileOutput.WriteString(sLine + "\n");
-			}
-			else if ("LABEL" == sLine)
-			{
-				fileOutput.WriteString("TAG:");
-				fileInput.ReadString(sLine);
-				fileOutput.WriteString(sLine + "\n");
-			}
-			else if ("LABEL_COMMENT" == sLine)
-			{
-				fileOutput.WriteString("TAG_COMMENT:");
-				fileInput.ReadString(sLine);
-				fileOutput.WriteString(sLine + "\n");
-			}
-			else if ("COMMENT" == sLine)
-			{
-				fileOutput.WriteString("C:");
-				fileInput.ReadString(sLine);
-				fileOutput.WriteString(sLine + "\n");
-			}
-			else if ("ACTION_COMMITED" == sLine)
-			{
-				fileOutput.WriteString("COMMIT\n");
-				//fileInput.ReadString(sLine);
-				//fileOutput.WriteString(sLine + "\n");
-			}
-			else if ("ACTION_CREATED" == sLine)
-			{
-				fileOutput.WriteString("ADD\n");
-				//fileOutput.WriteString("F:");
-				//fileInput.ReadString(sLine);
-				//fileOutput.WriteString(sLine + "\n");
-			}
-			else if ("ACTION_BRANCHED" == sLine)
-			{
-				fileOutput.WriteString("COMMENT - BRANCHED\n");
-				//fileOutput.WriteString("F:");
-				//fileInput.ReadString(sLine);
-				//fileOutput.WriteString(sLine + "\n");
-			}
-			else if ("ACTION_LABELED" == sLine)
-			{
-				fileOutput.WriteString("COMMENT - LABELED\n");
-				//fileOutput.WriteString("F:");
-				//fileInput.ReadString(sLine);
-				//fileOutput.WriteString(sLine + "\n");
-			}
-			else if ("TRASH" == sLine)
-			{
-				fileOutput.WriteString("SKIPPED - :");
-				fileInput.ReadString(sLine);
-				fileOutput.WriteString(sLine + "\n");
-			}
-			else
-			{
-				fileOutput.WriteString(">> ERROR:");
-				fileOutput.WriteString(sLine + "\n");
-				printf(">> ERROR: Unrecognized token '%s'\n", sLine);
-
-			}
+			fileOutput.WriteString(FormatStr("Total file+version count: %d\n", vect.size()));
+			//file::MarkJobDone(szOutputFile);
+		}
+		catch(CFileException *e)
+		{
+			e->ReportError();
+			ASSERT(FALSE);
+			e->Delete();
 		}
 
-		fileInput.Close();
 		fileOutput.Close();
-		file::MarkJobDone(szOutputFile);
 	}
 };
 
@@ -496,7 +538,6 @@ void processor::Run()
 	Step2_CollectInfo (paths::szStep1_VssDir, paths::szStep2_Paths, paths::szStep2_SkippedPaths);
 	Step3_GroupInfo   (paths::szStep2_Paths,  paths::szStep3_Grouped);
 
-	//SDataVect vect;
 
 	printf("\n>> ");
 	system("TIME/T");

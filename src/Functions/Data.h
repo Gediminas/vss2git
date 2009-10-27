@@ -6,9 +6,12 @@
 struct SData
 {
 	SData() : version(0) { }
-	CString path;
-	CString date;
+	CString file;
+	CString time;
 	CString user;
+	CString comment;
+	CString label;
+	CString label_comment;
 	int     version;
 };
 
