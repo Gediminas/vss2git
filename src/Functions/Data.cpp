@@ -9,27 +9,33 @@ static char THIS_FILE[]=__FILE__;
 #endif
 
 
-int data::compare_by_time_user(const SData* x, const SData* y)
+bool data::compare_by_time_user(const void* ppData1, const void* ppData2)
 {
-	ASSERT_POINTER(x, SData);
-	ASSERT_POINTER(y, SData);
-//
-//	if (x == y)
-//	{
-		return 0;
-//	}
-//
-//	CString sx = x->time + " " + x->user;
-//	CString sy = y->time + " " + y->user;
-//	
-//	//TRACE("'%s' <> '%s'\n", sx, sy);
-//
-//	if (sx == sy)
-//	{
-//		return 0;
-//	}
-//
-//	return sx.CompareNoCase(sy);
+	const SData *pData1 = (const SData*) ppData1;
+	const SData *pData2 = (const SData*) ppData2;
+
+	ASSERT_POINTER(pData1, SData);
+	ASSERT_POINTER(pData2, SData);
+
+	if (pData1 == pData2)
+	{
+		return false;
+	}
+
+	CString sx = pData1->time + " " + pData1->user;
+	CString sy = pData2->time + " " + pData2->user;
+	
+	if (sx == sy)
+	{
+		return false;
+	}
+
+	if (-1 != sx.CompareNoCase(sy))
+	{
+		return false;
+	}
+
+	return true;
 }
 
 

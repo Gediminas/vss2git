@@ -40,7 +40,7 @@ private:
 
 namespace data
 {
-	int compare_by_time_user(const SData* x, const SData* y);
+	bool compare_by_time_user(const void* ppData1, const void* ppData2);
 };
 //namespace data
 
