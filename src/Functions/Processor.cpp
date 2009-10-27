@@ -226,7 +226,9 @@ static void Step2_CollectPaths(LPCTSTR szInputFile, LPCTSTR szOutputFile, LPCTST
 		}
 
 		const DWORD dwFileLength = fileI.GetLength();
+		
 		CString sClearText(' ', 70);
+		sClearText = "\r" + sClearText;
 
 		CString sLine, sCurrentFolder, sLogDir;
 
