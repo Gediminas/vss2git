@@ -42,20 +42,18 @@ void vss::list_all_files(LPCTSTR szOutputFile)
 	}
 }
 
-void vss::list_file_versions(LPCTSTR szFile, LPCTSTR szOutputFile)
+void vss::list_file_versions(LPCTSTR szVssFile, LPCTSTR szOutputFile)
 {
 	::DeleteFile(szOutputFile);
 
 	CString sCommand;
-	sCommand.Format(FormatStr("%s History \"%s\" >> %s", ss_exe, szFile, szOutputFile));
-	
-//	if (-1 != CString(sCommand).Find("DB "))
-//	{
-//		printf("\n--\n");
-//		printf(sCommand);
-//		system(sCommand);
-//		printf("\n--\n");
-//	}
+	sCommand.Format(FormatStr("%s History \"%s\" >> %s", ss_exe, szVssFile, szOutputFile));
+	system(sCommand);
+}
 
+void vss::get_file(LPCTSTR szVssFile, int nVssFileVersion, LPCTSTR szOutputFile)
+{
+	CString sCommand;
+	sCommand.Format(FormatStr("%s Get \"%s\" -V%d >> %s", ss_exe, szVssFile, nVssFileVersion, szOutputFile));
 	system(sCommand);
 }

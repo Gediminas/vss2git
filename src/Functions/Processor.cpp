@@ -22,17 +22,25 @@ static char THIS_FILE[]=__FILE__;
 class CImportGroupData
 {
 public:
-	CImportGroupData(int nCount)
+	CImportGroupData(int nCount, LPCTSTR szOutputFile)
 	: m_nCurrentLine(1),
-	  m_nCount(nCount)
+	  m_nItem(0),
+	  m_nCount(nCount),
+	  m_sOutputFile(szOutputFile)
 	{
 		m_pFileProgress = new CStdioFile;
 		
 		if (m_pFileProgress->Open(paths::szImportProgress, CFile::modeRead | CFile::shareDenyNone, NULL))
 		{
 			CString sLine;
-			VERIFY(m_pFileProgress->ReadString(sLine));
-			m_nCurrentLine = atoi(sLine);
+			if (m_pFileProgress->ReadString(sLine))
+			{
+				m_nCurrentLine = atoi(sLine);
+			}
+			else
+			{
+				ASSERT(FALSE); //Corrupted file???
+			}
 			m_pFileProgress->Close();
 		}
 
@@ -46,8 +54,27 @@ public:
 
 	void operator () (SGroupData* pGroupData)
 	{
+		++ m_nItem;
+
+		if (m_nItem <= m_nCurrentLine)
+		{
+			return; //already imported
+		}
+		++ m_nCurrentLine;
+
+		system(FormatStr("ECHO ********** >> %s", m_sOutputFile));
+		system(FormatStr("ECHO %s %s >> %s", pGroupData->time, pGroupData->user, m_sOutputFile));
+
+		for (SDataVect::iterator it = pGroupData->data_vect->begin(); pGroupData->data_vect->end() != it; ++ it)
+		{
+			//SData *&data = (*it);
+			//vss::get_file(data->file, data->version, m_sOutputFile);
+		}
+
+
 		m_pFileProgress->SetLength(0);
-		m_pFileProgress->WriteString(FormatStr("%d\n", ++ m_nCurrentLine));
+		m_pFileProgress->WriteString(FormatStr("%d\n", m_nCurrentLine));
+		m_pFileProgress->Flush();
 		printf("\r>> %d%%", 100 * m_nCurrentLine / m_nCount);
 	}
 
@@ -60,8 +87,10 @@ public:
 
 private:
 	int m_nCurrentLine;
+	int m_nItem;
 	int m_nCount;
 	CStdioFile *m_pFileProgress;
+	CString m_sOutputFile;
 };
 
 
@@ -520,7 +549,7 @@ static bool BuildGroupDataVect(SDataVect &vect_for_auto_delete, SGroupDataVect &
 
 static bool Import(SGroupDataVect &group_vect, LPCTSTR szOutputFile)
 {
-	CImportGroupData import(group_vect.size());
+	CImportGroupData import(group_vect.size(), szOutputFile);
 	std::for_each(group_vect.begin(), group_vect.end(), import);
 	import.Destroy();
 		
