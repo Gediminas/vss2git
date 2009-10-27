@@ -70,6 +70,11 @@ static void AddFileVersions(LPCTSTR szFilePath, CStdioFile &output_file)
 			output_file.WriteString("FILE\n");
 			output_file.WriteString(sFilePath);
 			output_file.WriteString("\n");
+
+//			if (-1 != sFilePath.Find("BrandViewFrameAll.h"))
+//			{
+//				ASSERT(FALSE);
+//			}
 			
 			output_file.WriteString("VERSION\n");
 			output_file.WriteString(sToken);
@@ -169,6 +174,16 @@ static void AddFileVersions(LPCTSTR szFilePath, CStdioFile &output_file)
 			else if (0 == sLine.Find("Labeled"))
 			{
 				output_file.WriteString("ACTION_LABELED\n");
+			}
+			else if ("**********************" == sLine)
+			{
+				do
+				{
+					output_file.WriteString("TRASH\n");
+					output_file.WriteString(sLine);
+					output_file.WriteString("\n");
+				}
+				while(fileDump.ReadString(sLine) && !sLine.IsEmpty());
 			}
 			else
 			{
@@ -391,7 +406,7 @@ static void Step3_GroupInfo(LPCTSTR szInputFile, LPCTSTR szOutputFile)
 			}
 			else if ("VERSION" == sLine)
 			{
-				fileOutput.WriteString("V:");
+				fileOutput.WriteString("v:");
 				fileInput.ReadString(sLine);
 				fileOutput.WriteString(sLine + "\n");
 			}
@@ -407,9 +422,15 @@ static void Step3_GroupInfo(LPCTSTR szInputFile, LPCTSTR szOutputFile)
 				fileInput.ReadString(sLine);
 				fileOutput.WriteString(sLine + "\n");
 			}
-			else if ("TAG" == sLine)
+			else if ("LABEL" == sLine)
 			{
 				fileOutput.WriteString("TAG:");
+				fileInput.ReadString(sLine);
+				fileOutput.WriteString(sLine + "\n");
+			}
+			else if ("LABEL_COMMENT" == sLine)
+			{
+				fileOutput.WriteString("TAG_COMMENT:");
 				fileInput.ReadString(sLine);
 				fileOutput.WriteString(sLine + "\n");
 			}
@@ -419,27 +440,36 @@ static void Step3_GroupInfo(LPCTSTR szInputFile, LPCTSTR szOutputFile)
 				fileInput.ReadString(sLine);
 				fileOutput.WriteString(sLine + "\n");
 			}
-			else if ("COMMIT" == sLine)
+			else if ("ACTION_COMMITED" == sLine)
 			{
+				fileOutput.WriteString("COMMIT\n");
+				//fileInput.ReadString(sLine);
+				//fileOutput.WriteString(sLine + "\n");
+			}
+			else if ("ACTION_CREATED" == sLine)
+			{
+				fileOutput.WriteString("ADD\n");
 				//fileOutput.WriteString("F:");
 				//fileInput.ReadString(sLine);
 				//fileOutput.WriteString(sLine + "\n");
 			}
-			else if ("CREATED" == sLine)
+			else if ("ACTION_BRANCHED" == sLine)
 			{
+				fileOutput.WriteString("COMMENT - BRANCHED\n");
 				//fileOutput.WriteString("F:");
 				//fileInput.ReadString(sLine);
 				//fileOutput.WriteString(sLine + "\n");
 			}
-			else if ("BRANCHED" == sLine)
+			else if ("ACTION_LABELED" == sLine)
 			{
+				fileOutput.WriteString("COMMENT - LABELED\n");
 				//fileOutput.WriteString("F:");
 				//fileInput.ReadString(sLine);
 				//fileOutput.WriteString(sLine + "\n");
 			}
 			else if ("TRASH" == sLine)
 			{
-				fileOutput.WriteString("X:");
+				fileOutput.WriteString("SKIPPED - :");
 				fileInput.ReadString(sLine);
 				fileOutput.WriteString(sLine + "\n");
 			}
