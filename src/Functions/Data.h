@@ -5,7 +5,6 @@
 
 struct SData
 {
-	SData() : version(0) { }
 	CString file;
 	CString time;
 	CString user;
@@ -13,8 +12,10 @@ struct SData
 	CString label;
 	CString label_comment;
 	int     version;
-};
 
+	SData();
+	~SData();
+};
 
 class SDataVect : public std::vector<SData*>
 {
@@ -24,12 +25,44 @@ public:
 };
 
 
+struct SGroupData
+{
+	CString    date_time;
+	CString    user;
+	SDataVect *data_vect;
+
+	SGroupData();
+	~SGroupData();
+};
+
+class SGroupDataVect : public std::vector<SGroupData*>
+{
+public:
+	SGroupDataVect();
+	~SGroupDataVect();
+};
+
+
+class CDataVectGrouping
+{
+public:
+	CDataVectGrouping(SGroupDataVect &group_vect);
+	void operator () (SData* pData);
+	~CDataVectGrouping();
+
+private:
+	CString sLastTime;
+	CString sLastUser;
+	SGroupDataVect &m_group_vect;
+};
+
+
 class CStoreData
 {
 public:
 	CStoreData(CStdioFile &file, int nProgressSize);
 	~CStoreData();
-	operator () (SData* pData);
+	void operator () (SData* pData);
 
 private:
 	CStdioFile &m_file;

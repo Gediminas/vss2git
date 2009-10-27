@@ -52,6 +52,19 @@ public:
 
 
 
+SData::SData()
+: version(0)
+{
+
+}
+
+SData::~SData()
+{
+
+}
+
+
+
 SDataVect::SDataVect()
 {
 
@@ -63,6 +76,31 @@ SDataVect::~SDataVect()
 	std::for_each(begin(), end(), del);
 }
 
+
+
+SGroupData::SGroupData()
+{
+	data_vect = new SDataVect;
+}
+
+SGroupData::~SGroupData()
+{
+	data_vect->clear(); //to avoid destruction of not owned data!
+	delete data_vect;
+	data_vect = NULL; //just in case
+}
+
+
+
+SGroupDataVect::SGroupDataVect()
+{
+
+}
+
+SGroupDataVect::~SGroupDataVect()
+{
+
+}
 
 
 CStoreData::CStoreData(CStdioFile &file, int nProgressSize)
@@ -78,7 +116,7 @@ CStoreData::~CStoreData()
 
 }
 	
-CStoreData::operator () (SData* pData)
+void CStoreData::operator () (SData* pData)
 {
 	CString s;
 	s += pData->time;
@@ -97,5 +135,27 @@ CStoreData::operator () (SData* pData)
 	{
 		printf("\r>> %d%%", 100 * m_nProgressCurrent / m_nProgressSize);
 	}
+}
+
+
+
+CDataVectGrouping::CDataVectGrouping(SGroupDataVect &group_vect)
+: m_group_vect(group_vect)
+{
+	ASSERT(0 == m_group_vect.size());
+
+}
+
+CDataVectGrouping::~CDataVectGrouping()
+{
+
+}
+
+void CDataVectGrouping::operator () (SData* pData)
+{
+	ASSERT_POINTER(pData, SData);
+
+	//if (sLastUser)
+	//pData->time;
 }
 
