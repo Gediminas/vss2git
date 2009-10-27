@@ -15,6 +15,8 @@ CWinApp theApp;
 
 int _tmain(int argc, TCHAR* argv[], TCHAR* envp[])
 {
+	system("COLOR 0A");
+
 	printf("--------------------------\n");
 	system("SET ssDir");
 	system("SET ssUser");
