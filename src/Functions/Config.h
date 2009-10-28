@@ -13,7 +13,9 @@ namespace config
 	const LPCTSTR szWorkingDir           = "../tmp/Working";
 	const LPCTSTR szDump                 = "../tmp/dump.txt";
 	const LPCTSTR szCounters             = "../tmp/Counters.txt";
+	
 	const LPCTSTR szImportProgress       = "../tmp/ImportProgress.txt";
+	const LPCTSTR szImportProgress_D     = "../tmp/D_ImportProgress.txt";
 
 	//STEPS
 

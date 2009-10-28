@@ -19,11 +19,16 @@ static char THIS_FILE[]=__FILE__;
 #endif
 
 
-static CString m_sFromDate;
+static CString s_sFromDate;
 
 inline bool IsFromDate()
 {
-	return !m_sFromDate.IsEmpty();
+	return !s_sFromDate.IsEmpty();
+}
+
+inline const CString &GetFromDate()
+{
+	return s_sFromDate;
 }
 
 
@@ -52,7 +57,7 @@ public:
 
 	}
 
-	void Init(int nCount, LPCTSTR szWorkingDir, LPCTSTR szOutputFile)
+	void Init(int nCount, LPCTSTR szWorkingDir, LPCTSTR szOutputFile, LPCTSTR szImportProgress)
 	{
 		m_nCurrentLine = 0,
 		m_nItem        = 0,
@@ -62,7 +67,7 @@ public:
 		
 		m_pFileProgress = new CStdioFile;
 		
-		if (m_pFileProgress->Open(config::szImportProgress, CFile::modeRead | CFile::shareDenyNone, NULL))
+		if (m_pFileProgress->Open(szImportProgress, CFile::modeRead | CFile::shareDenyNone, NULL))
 		{
 			CString sLine;
 			if (m_pFileProgress->ReadString(sLine))
@@ -76,7 +81,7 @@ public:
 			m_pFileProgress->Close();
 		}
 
-		VERIFY(m_pFileProgress->Open(config::szImportProgress, CFile::modeCreate | CFile::modeWrite | CFile::shareDenyNone, NULL));
+		VERIFY(m_pFileProgress->Open(szImportProgress, CFile::modeCreate | CFile::modeWrite | CFile::shareDenyNone, NULL));
 
 		//GetCurrentDirectory(2000, m_sSysWorkingDir.GetBufferSetLength(2000));
 		//SetCurrentDirectory(config::szWorkingDir);
@@ -390,7 +395,17 @@ static bool BuildDataVect(SDataVect &vect, LPCTSTR szInputFile)
 					ASSERT_POINTER(pData, SData);
 					ASSERT(0 < pData->version);
 
-					vect.push_back(pData);
+					if (::IsFromDate())
+					{
+						if (-1 != GetFromDate().Compare(pData->time))
+						{
+							vect.push_back(pData);
+						}
+					}
+					else
+					{
+						vect.push_back(pData);
+					}
 					
 					bAdd = false;
 
@@ -628,8 +643,10 @@ static bool BuildGroupDataVect(SDataVect &vect_for_auto_delete, SGroupDataVect &
 
 static bool Import(SGroupDataVect &group_vect, LPCTSTR szWorkingDir, LPCTSTR szOutputFile)
 {
+	const CString sProgress = IsFromDate() ? config::szImportProgress_D : config::szImportProgress;
+
 	CImportGroupData import;
-	import.Init(group_vect.size(), szWorkingDir, szOutputFile);
+	import.Init(group_vect.size(), szWorkingDir, szOutputFile, sProgress);
 	for_each2(group_vect.begin(), group_vect.end(), import);
 	import.Destroy();
 	return true;
@@ -753,6 +770,11 @@ static void Step2_CollectInfo(LPCTSTR szInputFile, LPCTSTR szOutputFile, LPCTSTR
 
 				printf(sClearText);
 				printf("\r>> %.1f%% (%s)", 100.0 * fileInput.GetPosition() / dwFileLength, sLogDir);
+			}
+			else if (0 == sCurrentFolder.Find("$/Archive"))
+			{
+				fileSkipped.WriteString(sCurrentFolder + "/" + sLine + "\n");
+				++ nSkippedFileCount;
 			}
 			else if ('$' != sLine[0])
 			{
@@ -885,12 +907,12 @@ void processor::Run()
 		CStdioFile fileInput;
 		if (fileInput.Open(config::szFromDate, CFile::modeRead | CFile::shareDenyWrite, NULL))
 		{
-			fileInput.ReadString(m_sFromDate);
+			fileInput.ReadString(s_sFromDate);
 			fileInput.Close();
 
 			if (IsFromDate())
 			{
-				printf("\nWARNING: import from date '%s' !!!\n\n", m_sFromDate);
+				printf("\nWARNING: import from date '%s' !!!\n\n", s_sFromDate);
 			}
 		}
 	}
@@ -907,11 +929,11 @@ void processor::Run()
 	GetCurrentDirectory(2000, sVssWorkingDir.GetBufferSetLength(2000));
 	SetCurrentDirectory(sOriginalFolder);
 
-	const CString sStep1  = IsFromDate() ? config::szStep1_VssDir       : config::szStep1_VssDir;
-	const CString sStep2  = IsFromDate() ? config::szStep2_Paths        : config::szStep2_Paths;
-	const CString sStep2s = IsFromDate() ? config::szStep2_SkippedPaths : config::szStep2_SkippedPaths;
-	const CString sStep3  = IsFromDate() ? config::szStep3_Grouped      : config::szStep3_Grouped;
-	const CString sStep4  = IsFromDate() ? config::szStep4_Import       : config::szStep4_Import;
+	const CString sStep1  = IsFromDate() ? config::szStep1_VssDir_D       : config::szStep1_VssDir;
+	const CString sStep2  = IsFromDate() ? config::szStep2_Paths_D        : config::szStep2_Paths;
+	const CString sStep2s = IsFromDate() ? config::szStep2_SkippedPaths_D : config::szStep2_SkippedPaths;
+	const CString sStep3  = IsFromDate() ? config::szStep3_Grouped_D      : config::szStep3_Grouped;
+	const CString sStep4  = IsFromDate() ? config::szStep4_Import_D       : config::szStep4_Import;
 
 	Step1_VssPaths    (sStep1);
 	Step2_CollectInfo (sStep1, sStep2, sStep2s);
