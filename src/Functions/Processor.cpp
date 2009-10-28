@@ -145,8 +145,9 @@ public:
 		m_pFileProgress->Flush();
 	}
 
-	void Destroy()
+	bool Finnish()
 	{
+		bool bRet = false;
 		if (INT_MAX == m_nCurrentLine)
 		{
 			printf("\n>> ABORTED", 100 * m_nCurrentLine / m_nCount, m_nCurrentLine);
@@ -154,6 +155,7 @@ public:
 		else
 		{
 			printf("\r>> FINISHED", 100 * m_nCurrentLine / m_nCount, m_nCurrentLine);
+			bRet = true;
 		}
 
 		printf("                    ");//20
@@ -166,6 +168,8 @@ public:
 		m_pFileProgress = NULL;
 
 		//SetCurrentDirectory(m_sSysWorkingDir);
+
+		return bRet;
 	}
 
 private:
@@ -652,8 +656,7 @@ static bool Import(SGroupDataVect &group_vect, LPCTSTR szWorkingDir, LPCTSTR szO
 	CImportGroupData import;
 	import.Init(group_vect.size(), szWorkingDir, szOutputFile, sProgress);
 	for_each2(group_vect.begin(), group_vect.end(), import);
-	import.Destroy();
-	return true;
+	return import.Finnish();
 }
 
 
@@ -888,14 +891,10 @@ static void Step4_Import(LPCTSTR szInputFile, LPCTSTR szOutputFile, LPCTSTR szWo
 		printf("\n");
 		printf(">> IMPORTING      (press ESC to cancel, you can continue later)\n");
 		printf(">>\n");
-		if (!Import(group_vect, szWorkingDir, szOutputFile))
+		if (Import(group_vect, szWorkingDir, szOutputFile))
 		{
-			printf(">> IMPORT FAILED\n");
-			getchar();
-			exit(1);
+			file::MarkJobDone(szOutputFile);
 		}
-
-		//file::MarkJobDone(szOutputFile);
 	}
 };
 

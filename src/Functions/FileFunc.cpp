@@ -208,15 +208,17 @@ bool file::StartJob(LPCTSTR szFilePath, bool bAppend /*=false*/)
 
 	if (bAppend)
 	{
-		if (file::DoesFileExist(szFilePath))
+		if (!file::DoesFileExist(CString(szFilePath) + ".DONE"))
 		{
-			printf(">> resuming\n");
-		}
+			if (file::DoesFileExist(szFilePath))
+			{
+				printf(">> resuming\n");
+			}
 
-		return true;
+			return true;
+		}
 	}
-	
-	if (!file::DoesFileExist(szFilePath) || !file::DoesFileExist(CString(szFilePath) + ".DONE"))
+	else if (!file::DoesFileExist(szFilePath) || !file::DoesFileExist(CString(szFilePath) + ".DONE"))
 	{
 		CleanupJob(szFilePath);
 		return true;
