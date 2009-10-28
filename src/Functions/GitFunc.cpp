@@ -21,7 +21,7 @@ void git::CreateDB(LPCTSTR szOutputDir, LPCTSTR szWorkingDir, LPCTSTR szEmail)
 
 	CString sCommand;
 	sCommand.Format("git init >> %s", sOutputDir);
-	RUN(sCommand);
+	RUN2(sCommand);
 
 	git::Commit(szOutputDir, szWorkingDir, "1998-10-01 16:00", "Admin", szEmail, 0);
 
@@ -39,22 +39,22 @@ void git::Commit(LPCTSTR szOutputDir, LPCTSTR szWorkingDir, LPCTSTR szTime, LPCT
 	CString sCommand;
 	sCommand.Format("git add -A >> %s", sOutputDir);
 	//sCommand = "git add -A";
-	RUN(sCommand);
+	RUN2(sCommand);
 
 	sCommand.Format("git config user.name %s >> %s", szUser, sOutputDir);
 	//sCommand.Format("git config user.name %s", szUser);
-	RUN(sCommand);
+	RUN2(sCommand);
 
 	sCommand.Format("git config user.email %s >> %s", szEmail, sOutputDir);
 	//sCommand.Format("git config user.email %s", szEmail);
-	RUN(sCommand);
+	RUN2(sCommand);
 
-	sCommand.Format("git commit -m\"vss2git: %d\" >> %s", nNr, sOutputDir);
+	sCommand.Format("git commit -m 'vss2git%d' >> %s", nNr, sOutputDir);
 	//sCommand.Format("git commit -m\"vss2git: %d\"", nNr);
-	RUN(sCommand);
+	RUN2(sCommand);
 
 	//sCommand.Format("git commit -m\"vss2git: %d\" >> %s", nNr, sOutputDir);
-	//RUN(sCommand);
+	//RUN2(sCommand);
 
 	//git add -A
 	//git config --global user.name "UserNameFromVSS"
