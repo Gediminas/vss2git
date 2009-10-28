@@ -390,29 +390,28 @@ static bool BuildDataVect(SDataVect &vect, LPCTSTR szInputFile)
 
 			if ("**********" == sKey)
 			{
+				ASSERT_POINTER(pData, SData);
+
 				if (bAdd)
 				{
-					ASSERT_POINTER(pData, SData);
-					ASSERT(0 < pData->version);
-
-					if (::IsFromDate())
-					{
-						if (-1 != GetFromDate().Compare(pData->time))
-						{
-							vect.push_back(pData);
-						}
-					}
-					else
-					{
-						vect.push_back(pData);
-					}
-					
-					bAdd = false;
-
 					if (1 == pData->version)
 					{
 						printf("\r>> %d%%", 100 * fileInput.GetPosition() / dwFileLength);
 					}
+
+					if (::IsFromDate())
+					{
+						if (pData->time < GetFromDate())
+						{
+							bAdd = false;
+						}
+					}
+				}
+
+				if (bAdd)
+				{
+					ASSERT(0 < pData->version);
+					vect.push_back(pData);
 				}
 				else
 				{
@@ -420,6 +419,7 @@ static bool BuildDataVect(SDataVect &vect, LPCTSTR szInputFile)
 				}
 
 				pData = new SData;
+				bAdd  = false;
 			}
 			else if (0 == sKey.Find("ACTION_"))
 			{
