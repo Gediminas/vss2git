@@ -1,8 +1,3 @@
-// stdafx.h : include file for standard system include files,
-//  or project specific include files that are used frequently, but
-//      are changed infrequently
-//
-
 #if !defined(AFX_STDAFX_H__5A8C4A14_B713_44A8_A1FB_0ECDC81D5D31__INCLUDED_)
 #define AFX_STDAFX_H__5A8C4A14_B713_44A8_A1FB_0ECDC81D5D31__INCLUDED_
 #pragma once

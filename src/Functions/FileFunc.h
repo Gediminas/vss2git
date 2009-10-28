@@ -3,6 +3,9 @@
 #pragma once
 
 
+void RUN(const CString& cmd);
+
+
 namespace file
 {
 	bool RunCommand(const CString& cmd, bool bRetrying = false);

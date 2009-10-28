@@ -8,6 +8,10 @@ static char THIS_FILE[]=__FILE__;
 #define new DEBUG_NEW
 #endif
 
+void RUN(const CString& cmd)
+{
+	system(cmd);
+}
 
 bool file::RunCommand(const CString& cmd, bool bRetrying /*=false*/)
 {
@@ -197,7 +201,7 @@ void file::CleanupJob(LPCTSTR szFilePath)
 
 void file::MarkJobDone(LPCTSTR szFilePath)
 {
-	system(FormatStr("ECHO DONE. >> %s.DONE", szFilePath));
+	RUN(FormatStr("ECHO DONE. >> %s.DONE", szFilePath));
 
 	CString sText(' ', 55);
 	sText = "\r>> done" + sText + "\n";

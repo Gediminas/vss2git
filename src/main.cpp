@@ -1,7 +1,7 @@
 #include "stdafx.h"
 
 #include "Functions/Processor.h"
-
+#include "Functions/FileFunc.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -15,12 +15,12 @@ CWinApp theApp;
 
 int _tmain(int argc, TCHAR* argv[], TCHAR* envp[])
 {
-	system("COLOR 0A");
+	RUN("COLOR 0A");
 
 	printf("--------------------------\n");
-	system("SET ssDir");
-	system("SET ssUser");
-	system("SET ssPwd");
+	RUN("SET ssDir");
+	RUN("SET ssUser");
+	RUN("SET ssPwd");
 	printf("--------------------------\n");
 
 	//printf("Press any key to start!\n");

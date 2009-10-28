@@ -19,13 +19,13 @@ void vss::init_root_workfolder(LPCTSTR szWorkFolder)
 {
 	printf(">> set root working folder\n");
 
-	system(FormatStr(ss_exe + " workfold $/ %s", szWorkFolder));
+	RUN(FormatStr(ss_exe + " workfold $/ %s", szWorkFolder));
 	
 	printf("\n");
 	printf("\n");
 
 	printf(">> set active root '$/'\n");
-	system(ss_exe + " Project $/");
+	RUN(ss_exe + " Project $/");
 	printf("\n");
 }
 
@@ -36,7 +36,7 @@ void vss::list_all_files(LPCTSTR szOutputFile)
 	{
 		file::CleanupJob(szOutputFile);
 		
-		system(FormatStr("%s Dir -R -E >> %s", ss_exe, szOutputFile));
+		RUN(FormatStr("%s Dir -R -E >> %s", ss_exe, szOutputFile));
 		
 		file::MarkJobDone(szOutputFile);
 	}
@@ -48,7 +48,7 @@ void vss::list_file_versions(LPCTSTR szVssFile, LPCTSTR szOutputFile)
 
 	CString sCommand;
 	sCommand.Format(FormatStr("%s History \"%s\" >> %s", ss_exe, szVssFile, szOutputFile));
-	system(sCommand);
+	RUN(sCommand);
 }
 
 void vss::get_file(LPCTSTR szVssFile, int nVssFileVersion, LPCTSTR szWorkingDir, LPCTSTR szOutputFile)
@@ -70,5 +70,6 @@ void vss::get_file(LPCTSTR szVssFile, int nVssFileVersion, LPCTSTR szWorkingDir,
 	//no log
 	sCommand.Format(FormatStr("%s Get \"%s\" -V%d -GL\"%s\" -O-", ss_exe, szVssFile, nVssFileVersion, sTo));
 
-	system(sCommand);
+	//RUN(sCommand);
+	file::RunCommand(sCommand);
 }

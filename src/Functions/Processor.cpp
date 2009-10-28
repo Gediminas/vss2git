@@ -71,8 +71,8 @@ public:
 		printf("\r>> %d%% processing %d of %d ", 100 * m_nCurrentLine / m_nCount, m_nCurrentLine, m_nCount);
 
 //		//SetCurrentDirectory(m_sSysWorkingDir);
-//		system(FormatStr("ECHO ********** >> %s", m_sOutputFile));
-//		system(FormatStr("ECHO %s %s >> %s", pGroupData->time, pGroupData->user, m_sOutputFile));
+//		RUN(FormatStr("ECHO ********** >> %s", m_sOutputFile));
+//		RUN(FormatStr("ECHO %s %s >> %s", pGroupData->time, pGroupData->user, m_sOutputFile));
 		//SetCurrentDirectory(m_sVssWorkingDir);
 
 		for (SDataVect::iterator it = pGroupData->data_vect->begin(); pGroupData->data_vect->end() != it; ++ it)
@@ -604,7 +604,7 @@ static void Initialize(LPCTSTR szTmpDir, LPCTSTR szWorkingDir)
 {
 	printf("\nINIT");
 	printf("\n>> ");
-	system("TIME/T");
+	RUN("TIME/T");
 
 	printf(">> create folder '%s'\n", szWorkingDir);
 	::CreateDirectory(szTmpDir, NULL);
@@ -616,7 +616,7 @@ static void Initialize(LPCTSTR szTmpDir, LPCTSTR szWorkingDir)
 	CString sGitIgnore(szWorkingDir);
 	sGitIgnore += "/.gitignore";
 	::DeleteFile(sGitIgnore);
-	system(FormatStr("ECHO *.scc >> %s", sGitIgnore));
+	RUN(FormatStr("ECHO *.scc >> %s", sGitIgnore));
 
 	git::CreateDB(paths::szInit, szWorkingDir, paths::szEmail);
 	vss::init_root_workfolder(szWorkingDir);
@@ -626,7 +626,7 @@ static void Step1_VssPaths(LPCTSTR szOutputFile)
 {
 	printf("\nSTEP1");
 	printf("\n>> ");
-	system("TIME/T");
+	RUN("TIME/T");
 	vss::list_all_files(szOutputFile);
 }
 
@@ -634,7 +634,7 @@ static void Step2_CollectInfo(LPCTSTR szInputFile, LPCTSTR szOutputFile, LPCTSTR
 {
 	printf("\nSTEP2");
 	printf("\n>> ");
-	system("TIME/T");
+	RUN("TIME/T");
 
 	if (file::StartJob(szOutputFile))
 	{
@@ -749,7 +749,7 @@ static void Step3_GroupInfo(LPCTSTR szInputFile, LPCTSTR szOutputFile)
 {
 	printf("\nSTEP3");
 	printf("\n>> ");
-	system("TIME/T");
+	RUN("TIME/T");
 
 	if (file::StartJob(szOutputFile))
 	{
@@ -767,7 +767,7 @@ static void Step3_GroupInfo(LPCTSTR szInputFile, LPCTSTR szOutputFile)
 		}
 
 		printf(FormatStr(">> file+version count: %d\n", vect.size()));
-		system(FormatStr("ECHO Step3 FILE+VERSION count: %7d >> %s", vect.size(), paths::szCounters));
+		RUN(FormatStr("ECHO Step3 FILE+VERSION count: %7d >> %s", vect.size(), paths::szCounters));
 
 		printf(">> sorting vector by date+user\n");
 		std::sort(vect.begin(), vect.end(), data::compare_by_time_user);
@@ -775,8 +775,8 @@ static void Step3_GroupInfo(LPCTSTR szInputFile, LPCTSTR szOutputFile)
 		printf(">> grouping vector by date+user\n");
 		GroupDataVect(vect, group_vect);
 
-		system(FormatStr("ECHO Step3 estimated VSS GET    count: %7d >> %s", vect.size(), paths::szCounters));
-		system(FormatStr("ECHO Step3 estimated GIT COMMIT count: %7d >> %s", group_vect.size(),           paths::szCounters));
+		RUN(FormatStr("ECHO Step3 estimated VSS GET    count: %7d >> %s", vect.size(), paths::szCounters));
+		RUN(FormatStr("ECHO Step3 estimated GIT COMMIT count: %7d >> %s", group_vect.size(),           paths::szCounters));
 
 		printf(">> storing data vector\n");
 		if (!StoreDataVect(group_vect, szOutputFile))
@@ -795,7 +795,7 @@ static void Step4_Import(LPCTSTR szInputFile, LPCTSTR szOutputFile, LPCTSTR szWo
 {
 	printf("\nSTEP4");
 	printf("\n>> ");
-	system("TIME/T");
+	RUN("TIME/T");
 
 	if (file::StartJob(szOutputFile, true))
 	{
@@ -812,8 +812,8 @@ static void Step4_Import(LPCTSTR szInputFile, LPCTSTR szOutputFile, LPCTSTR szWo
 
 		printf(FormatStr(">> estimated VSS GET    count: %7d\n",  vect_for_auto_delete.size()));
 		printf(FormatStr(">> estimated GIT COMMIT count: %7d\n",  group_vect.size()));
-		system(FormatStr("ECHO Step4 estimated VSS GET    count: %7d >> %s", vect_for_auto_delete.size(), paths::szCounters));
-		system(FormatStr("ECHO Step4 estimated GIT COMMIT count: %7d >> %s", group_vect.size(),           paths::szCounters));
+		RUN(FormatStr("ECHO Step4 estimated VSS GET    count: %7d >> %s", vect_for_auto_delete.size(), paths::szCounters));
+		RUN(FormatStr("ECHO Step4 estimated GIT COMMIT count: %7d >> %s", group_vect.size(),           paths::szCounters));
 
 		printf(">> IMPORTING\n");
 		if (!Import(group_vect, szWorkingDir, szOutputFile))
@@ -846,7 +846,7 @@ void processor::Run()
 
 
 	printf("\n>> ");
-	system("TIME/T");
+	RUN("TIME/T");
 }
 
 
