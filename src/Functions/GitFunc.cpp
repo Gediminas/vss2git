@@ -12,7 +12,7 @@ static char THIS_FILE[]=__FILE__;
 #endif
 
 
-void git::CreateDB(LPCTSTR szOutputDir, LPCTSTR szWorkingDir, LPCTSTR szEmail)
+void git::Create(LPCTSTR szOutputDir, LPCTSTR szWorkingDir, LPCTSTR szTime, LPCTSTR szUser, LPCTSTR szEmail)
 {
 	CString sOriginalDir;
 	GetCurrentDirectory(2000, sOriginalDir.GetBufferSetLength(2000));
@@ -30,7 +30,10 @@ void git::CreateDB(LPCTSTR szOutputDir, LPCTSTR szWorkingDir, LPCTSTR szEmail)
 		sCommand.Format("ECHO. >> %s", sOutputDir);
 		RUN(sCommand);
 
-		git::Commit(szOutputDir, szWorkingDir, "1998-10-01 16:00", "Admin", szEmail, 0);
+		sCommand.Format("ECHO. >> %s", sOutputDir);
+		RUN(sCommand);
+
+		git::Commit(szOutputDir, szWorkingDir, szTime, szUser, szEmail, 0);
 	}
 
 	SetCurrentDirectory(sOriginalDir);
@@ -55,8 +58,9 @@ void git::Commit(LPCTSTR szOutputDir, LPCTSTR szWorkingDir, LPCTSTR szTime, LPCT
 	sCommand.Format("git config user.email %s >> %s", szEmail, sOutputDir);
 	RUN(sCommand);
 
-	sCommand.Format("env GIT_AUTHOR_DATE=\"%s 0 %s\" git commit -m 'vss2git%d' >> %s", szTime, config::szTimeZone, nNr, sOutputDir);
+	sCommand.Format("env GIT_AUTHOR_DATE=\"%s 0 %s\" git commit -m 'vss2git: %d' >> %s", szTime, config::szTimeZone, nNr, sOutputDir);
 	RUN(sCommand);
 
 	SetCurrentDirectory(sOriginalDir);
 }
+

@@ -47,7 +47,8 @@ public:
 	CImportGroupData()
 	: m_nCurrentLine(-1),
 	  m_nItem(-1),
-	  m_nCount(-1)
+	  m_nCount(-1),
+	  m_bDBCreated(false)
 	{
 
 	}
@@ -105,15 +106,18 @@ public:
 			pGroupData->time,
 			pGroupData->user);
 
+		if (!m_bDBCreated)
+		{
+			git::Create(m_sOutputFile, m_sWorkingDir, pGroupData->time, pGroupData->user, config::szEmail);
+			m_bDBCreated = true;
+		}
+
 		//SetCurrentDirectory(m_sSysWorkingDir);
 		RUN(FormatStr("ECHO ************************************************************ >> %s", m_sOutputFile));
 		RUN(FormatStr("ECHO. >> %s", m_sOutputFile));
-		
 		RUN(FormatStr("ECHO Processing %d >> %s", m_nCurrentLine, m_sOutputFile));
 		RUN(FormatStr("ECHO %s  %s>> %s", pGroupData->time, pGroupData->user, m_sOutputFile));
-		
 		RUN(FormatStr("ECHO. >> %s", m_sOutputFile));
-		//RUN(FormatStr("ECHO       *** VSS ***>> %s", m_sOutputFile));
 
 		for (SDataVect::iterator it = pGroupData->data_vect->begin(); pGroupData->data_vect->end() != it; ++ it)
 		{
@@ -131,7 +135,6 @@ public:
 		}
 
 		RUN(FormatStr("ECHO.>> %s", m_sOutputFile));
-		//RUN(FormatStr("ECHO       *** GIT ***>> %s", m_sOutputFile));
 
 		git::Commit(m_sOutputFile, m_sWorkingDir, pGroupData->time, pGroupData->user, config::szEmail, m_nCurrentLine);
 		
@@ -172,7 +175,7 @@ private:
 	CStdioFile *m_pFileProgress;
 	CString m_sOutputFile;
 	CString m_sWorkingDir;
-
+	bool m_bDBCreated;
 	//CString m_sSysWorkingDir;
 	//CString m_sVssWorkingDir;
 };
@@ -662,7 +665,7 @@ inline bool CheckExt(const CString &sLine, LPCTSTR szExt)
 
 
 
-static void Initialize(LPCTSTR szOutputFile, LPCTSTR szTmpDir, LPCTSTR szWorkingDir)
+static void Initialize(LPCTSTR szTmpDir, LPCTSTR szWorkingDir)
 {
 	printf("\nINIT");
 	printf("\n>> ");
@@ -681,7 +684,6 @@ static void Initialize(LPCTSTR szOutputFile, LPCTSTR szTmpDir, LPCTSTR szWorking
 	RUN(FormatStr("ECHO *.scc>> %s", sGitIgnore));
 	RUN(FormatStr("ECHO *.obj>> %s", sGitIgnore));
 
-	git::CreateDB(szOutputFile, szWorkingDir, config::szEmail);
 	vss::init_root_workfolder(szWorkingDir);
 }
 
@@ -924,7 +926,7 @@ void processor::Run()
 		exit (1);
 	}
 
-	Initialize(config::szStep0_Init, config::szTmpDir, config::szWorkingDir);
+	Initialize(config::szTmpDir, config::szWorkingDir);
 
 	SetCurrentDirectory(config::szWorkingDir);
 	GetCurrentDirectory(2000, sVssWorkingDir.GetBufferSetLength(2000));

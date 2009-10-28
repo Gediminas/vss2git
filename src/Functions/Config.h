@@ -19,8 +19,6 @@ namespace config
 
 	//STEPS
 
-	const LPCTSTR szStep0_Init           = "../tmp/Step0_Init.txt";
-
 	const LPCTSTR szStep1_VssDir         = "../tmp/Step1_VssDir.txt";
 	const LPCTSTR szStep2_Paths          = "../tmp/Step2_Info.txt";
 	const LPCTSTR szStep2_SkippedPaths   = "../tmp/Step2_SkippedPaths.txt";
