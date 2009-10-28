@@ -5,10 +5,13 @@
 
 namespace paths
 {
+	const LPCTSTR szEmail              = "none@matrix-software.lt";
+
 	const LPCTSTR szTmpDir             = "../tmp";
 	const LPCTSTR szWorkingDir         = "../tmp/Working";
 	const LPCTSTR szDump               = "../tmp/dump.txt";
 	const LPCTSTR szCounters           = "../tmp/Counters.txt";
+	const LPCTSTR szInit			   = "../tmp/Init.txt";
 
 	const LPCTSTR szStep1_VssDir       = "../tmp/Step1_VssDir.txt";
 	const LPCTSTR szStep2_Paths        = "../tmp/Step2_Info.txt";

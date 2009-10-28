@@ -9,3 +9,52 @@ static char THIS_FILE[]=__FILE__;
 #endif
 
 
+void git::CreateDB(LPCTSTR szOutputDir, LPCTSTR szWorkingDir, LPCTSTR szEmail)
+{
+	CString sOriginalDir;
+	GetCurrentDirectory(2000, sOriginalDir.GetBufferSetLength(2000));
+	SetCurrentDirectory(szWorkingDir);
+	
+	CString sOutputDir = "../Step4_Import.txt";
+
+	CString sCommand;
+	sCommand.Format("git init >> %s", sOutputDir);
+	system(sCommand);
+
+	git::Commit(szOutputDir, szWorkingDir, "1998-10-01 16:00", "Admin", szEmail, 0);
+
+	SetCurrentDirectory(sOriginalDir);
+}
+
+void git::Commit(LPCTSTR szOutputDir, LPCTSTR szWorkingDir, LPCTSTR szTime, LPCTSTR szUser, LPCTSTR szEmail, int nNr)
+{
+	CString sOriginalDir;
+	GetCurrentDirectory(2000, sOriginalDir.GetBufferSetLength(2000));
+	SetCurrentDirectory(szWorkingDir);
+	
+	CString sOutputDir = "../Step4_Import.txt";
+
+	CString sCommand;
+	sCommand.Format("git add -A >> %s", sOutputDir);
+	system(sCommand);
+
+	sCommand.Format("git config --global user.name %s >> %s", szUser, sOutputDir);
+	system(sCommand);
+
+	sCommand.Format("git config --global user.email %s >> %s", szEmail, sOutputDir);
+	system(sCommand);
+
+	sCommand.Format("git commit -m\"vss2git: %d\" >> %s", nNr, sOutputDir);
+	system(sCommand);
+
+	//sCommand.Format("git commit -m\"vss2git: %d\" >> %s", nNr, sOutputDir);
+	//system(sCommand);
+
+	//git add -A
+	//git config --global user.name "UserNameFromVSS"
+	//git config --global user.email "UserNameFromVSS@matrix-software.lt"
+	//env GIT_AUTHOR_DATE='Wed Dec 19 15:14:05 203 -0800'git commit -m 'future!'
+
+
+	SetCurrentDirectory(sOriginalDir);
+}

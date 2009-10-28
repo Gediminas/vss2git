@@ -78,17 +78,20 @@ public:
 			vss::get_file(data->file, data->version, m_sWorkingDir, m_sOutputFile);
 		}
 
+		git::Commit(m_sOutputFile, m_sWorkingDir, pGroupData->time, pGroupData->user, paths::szEmail, m_nCurrentLine);
 		//printf(FormatStr("Commit %d done...\n", m_nCurrentLine));
 		//getchar();
 
 		m_pFileProgress->SetLength(0);
 		m_pFileProgress->WriteString(FormatStr("%d\n", m_nCurrentLine));
 		m_pFileProgress->Flush();
-		printf("\r>> %d%%", 100 * m_nCurrentLine / m_nCount);
+		printf("\r>> %d%% commit %d", 100 * m_nCurrentLine / m_nCount, m_nCurrentLine);
 	}
 
 	void Destroy()
 	{
+		printf("\r>> FINISHED                  \n", 100 * m_nCurrentLine / m_nCount, m_nCurrentLine);
+
 		m_pFileProgress->Close();
 		delete m_pFileProgress;
 		m_pFileProgress = NULL;
@@ -566,8 +569,6 @@ static bool Import(SGroupDataVect &group_vect, LPCTSTR szWorkingDir, LPCTSTR szO
 	CImportGroupData import(group_vect.size(), szWorkingDir, szOutputFile);
 	std::for_each(group_vect.begin(), group_vect.end(), import);
 	import.Destroy();
-		
-	printf("\r>> finished\n");
 	return true;
 }
 
@@ -598,6 +599,7 @@ static void Initialize(LPCTSTR szTmpDir, LPCTSTR szWorkingDir)
 	::DeleteFile(sGitIgnore);
 	system(FormatStr("ECHO *.scc >> %s", sGitIgnore));
 
+	git::CreateDB(paths::szInit, szWorkingDir, paths::szEmail);
 	vss::init_root_workfolder(szWorkingDir);
 }
 
