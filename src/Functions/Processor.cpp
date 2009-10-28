@@ -390,10 +390,10 @@ static bool BuildDataVect(SDataVect &vect, LPCTSTR szInputFile)
 
 			if ("**********" == sKey)
 			{
-				ASSERT_POINTER(pData, SData);
-
 				if (bAdd)
 				{
+					ASSERT_POINTER(pData, SData);
+	
 					if (1 == pData->version)
 					{
 						printf("\r>> %d%%", 100 * fileInput.GetPosition() / dwFileLength);
@@ -410,6 +410,7 @@ static bool BuildDataVect(SDataVect &vect, LPCTSTR szInputFile)
 
 				if (bAdd)
 				{
+					ASSERT_POINTER(pData, SData);
 					ASSERT(0 < pData->version);
 					vect.push_back(pData);
 				}
