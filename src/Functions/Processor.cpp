@@ -94,12 +94,12 @@ public:
 
 		//SetCurrentDirectory(m_sSysWorkingDir);
 		RUN(FormatStr("ECHO ************************************************************ >> %s", m_sOutputFile));
-		RUN(FormatStr("ECHO.>> %s", m_sOutputFile));
+		RUN(FormatStr("ECHO. >> %s", m_sOutputFile));
 		
-		RUN(FormatStr("ECHO Processing %d>> %s", m_nCurrentLine, m_sOutputFile));
+		RUN(FormatStr("ECHO Processing %d >> %s", m_nCurrentLine, m_sOutputFile));
 		RUN(FormatStr("ECHO %s  %s>> %s", pGroupData->time, pGroupData->user, m_sOutputFile));
 		
-		RUN(FormatStr("ECHO.>> %s", m_sOutputFile));
+		RUN(FormatStr("ECHO. >> %s", m_sOutputFile));
 		//RUN(FormatStr("ECHO       *** VSS ***>> %s", m_sOutputFile));
 
 		for (SDataVect::iterator it = pGroupData->data_vect->begin(); pGroupData->data_vect->end() != it; ++ it)
