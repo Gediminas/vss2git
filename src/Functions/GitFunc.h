@@ -7,6 +7,8 @@ namespace git
 {
 	void Create(LPCTSTR szOutputDir, LPCTSTR szWorkingDir, LPCTSTR szTime, LPCTSTR szUser, LPCTSTR szEmail);
 	void Commit(LPCTSTR szOutputDir, LPCTSTR szWorkingDir, LPCTSTR szTime, LPCTSTR szUser, LPCTSTR szEmail, int nNr);
+
+	void GetLastComment(LPCTSTR szWorkingDir, CString &sComment);
 };
 //namespace git
 

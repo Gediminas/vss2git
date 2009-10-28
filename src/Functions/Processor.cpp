@@ -45,7 +45,8 @@ class CImportGroupData
 {
 public:
 	CImportGroupData()
-	: m_nCurrentLine(-1),
+	: m_nCommitNr(-1),
+	  m_nCurrentLine(-1),
 	  m_nItem(-1),
 	  m_nCount(-1),
 	  m_bDBCreated(false)
@@ -109,7 +110,30 @@ public:
 		if (!m_bDBCreated)
 		{
 			git::Create(m_sOutputFile, m_sWorkingDir, pGroupData->time, pGroupData->user, config::szEmail);
+
 			m_bDBCreated = true;
+			m_nCommitNr  = m_nCurrentLine;
+
+			if (::IsFromDate())
+			{
+				CString sComment;
+				git::GetLastComment(m_sWorkingDir, sComment);
+
+				if (0 == sComment.Find("vss2git: "))
+				{
+					sComment = sComment.Right(sComment.GetLength() - strlen("vss2git: "));
+					m_nCommitNr = atoi(sComment) + 1;
+				}
+				else if (0 == sComment.Find("vss2git"))
+				{
+					sComment = sComment.Right(sComment.GetLength() - strlen("vss2git"));
+					m_nCommitNr = atoi(sComment) + 1;
+				}
+			}
+		}
+		else
+		{
+			++ m_nCommitNr;
 		}
 
 		//SetCurrentDirectory(m_sSysWorkingDir);
@@ -136,7 +160,7 @@ public:
 
 		RUN(FormatStr("ECHO.>> %s", m_sOutputFile));
 
-		git::Commit(m_sOutputFile, m_sWorkingDir, pGroupData->time, pGroupData->user, config::szEmail, m_nCurrentLine);
+		git::Commit(m_sOutputFile, m_sWorkingDir, pGroupData->time, pGroupData->user, config::szEmail, m_nCommitNr);
 		
 		RUN(FormatStr("ECHO.>> %s", m_sOutputFile));
 
@@ -173,6 +197,7 @@ public:
 	}
 
 private:
+	int m_nCommitNr;
 	int m_nCurrentLine;
 	int m_nItem;
 	int m_nCount;
@@ -515,7 +540,18 @@ static bool BuildDataVect(SDataVect &vect, LPCTSTR szInputFile)
 			ASSERT_POINTER(pData, SData);
 			ASSERT(0 < pData->version);
 
-			vect.push_back(pData);
+			if (::IsFromDate())
+			{
+				if (pData->time < GetFromDate())
+				{
+					bAdd = false;
+				}
+			}
+
+			if (bAdd)
+			{
+				vect.push_back(pData);
+			}
 		}
 	}
 	catch(CFileException *e)

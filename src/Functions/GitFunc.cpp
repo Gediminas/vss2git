@@ -12,7 +12,7 @@ static char THIS_FILE[]=__FILE__;
 #endif
 
 
-void git::Create(LPCTSTR szOutputDir, LPCTSTR szWorkingDir, LPCTSTR szTime, LPCTSTR szUser, LPCTSTR szEmail)
+void git::Create(LPCTSTR szOutputFile, LPCTSTR szWorkingDir, LPCTSTR szTime, LPCTSTR szUser, LPCTSTR szEmail)
 {
 	CString sOriginalDir;
 	GetCurrentDirectory(2000, sOriginalDir.GetBufferSetLength(2000));
@@ -20,47 +20,78 @@ void git::Create(LPCTSTR szOutputDir, LPCTSTR szWorkingDir, LPCTSTR szTime, LPCT
 	
 	if (!file::DoesFileExist(".git"))
 	{
-		CString sOutputDir = szOutputDir;
-		sOutputDir.Replace("../", "../../"); //workaround
+		CString sOutputFile = szOutputFile;
+		sOutputFile.Replace("../", "../../"); //workaround
 
 		CString sCommand;
-		sCommand.Format("git init >> %s", sOutputDir);
+		sCommand.Format("git init >> %s", sOutputFile);
 		RUN(sCommand);
 
-		sCommand.Format("ECHO. >> %s", sOutputDir);
+		sCommand.Format("ECHO. >> %s", sOutputFile);
 		RUN(sCommand);
 
-		sCommand.Format("ECHO. >> %s", sOutputDir);
+		sCommand.Format("ECHO. >> %s", sOutputFile);
 		RUN(sCommand);
 
-		git::Commit(szOutputDir, szWorkingDir, szTime, szUser, szEmail, 0);
+		git::Commit(szOutputFile, szWorkingDir, szTime, szUser, szEmail, 0);
 	}
 
 	SetCurrentDirectory(sOriginalDir);
 }
 
-void git::Commit(LPCTSTR szOutputDir, LPCTSTR szWorkingDir, LPCTSTR szTime, LPCTSTR szUser, LPCTSTR szEmail, int nNr)
+void git::Commit(LPCTSTR szOutputFile, LPCTSTR szWorkingDir, LPCTSTR szTime, LPCTSTR szUser, LPCTSTR szEmail, int nNr)
 {
 	CString sOriginalDir;
 	GetCurrentDirectory(2000, sOriginalDir.GetBufferSetLength(2000));
 	SetCurrentDirectory(szWorkingDir);
 	
-	CString sOutputDir = szOutputDir;
-	sOutputDir.Replace("../", "../../"); //workaround
+	CString sOutputFile = szOutputFile;
+	sOutputFile.Replace("../", "../../"); //workaround
 
 	CString sCommand;
-	sCommand.Format("git add -A >> %s", sOutputDir);
+	sCommand.Format("git add -A >> %s", sOutputFile);
 	RUN(sCommand);
 
-	sCommand.Format("git config user.name %s >> %s", szUser, sOutputDir);
+	sCommand.Format("git config user.name %s >> %s", szUser, sOutputFile);
 	RUN(sCommand);
 
-	sCommand.Format("git config user.email %s >> %s", szEmail, sOutputDir);
+	sCommand.Format("git config user.email %s >> %s", szEmail, sOutputFile);
 	RUN(sCommand);
 
-	sCommand.Format("env GIT_AUTHOR_DATE=\"%s 0 %s\" git commit -m 'vss2git: %d' >> %s", szTime, config::szTimeZone, nNr, sOutputDir);
+	sCommand.Format("env GIT_AUTHOR_DATE=\"%s 0 %s\" git commit -m 'vss2git: %d' >> %s", szTime, config::szTimeZone, nNr, sOutputFile);
 	RUN(sCommand);
 
 	SetCurrentDirectory(sOriginalDir);
 }
 
+void git::GetLastComment(LPCTSTR szWorkingDir, CString &sComment)
+{
+	CString sOriginalDir;
+	GetCurrentDirectory(2000, sOriginalDir.GetBufferSetLength(2000));
+	SetCurrentDirectory(szWorkingDir);
+	
+	CString sOutputFile = config::szDump;
+	sOutputFile.Replace("../", "../../"); //workaround
+
+	CString sCommand;
+	sCommand.Format("git log -1 >> %s", sOutputFile);
+	RUN(sCommand);
+
+	CStdioFile file;
+	if (file.Open(sOutputFile, CFile::modeRead | CFile::shareDenyNone, NULL))
+	{
+		file.ReadString(sComment);
+		file.ReadString(sComment);
+		file.ReadString(sComment);
+		file.ReadString(sComment);
+		file.ReadString(sComment);
+		sComment.TrimLeft();
+		file.Close();
+	}
+
+//	sComment = "vss2git: 12345";
+
+	::DeleteFile(sOutputFile);
+
+	SetCurrentDirectory(sOriginalDir);
+}
