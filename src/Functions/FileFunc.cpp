@@ -208,7 +208,11 @@ bool file::StartJob(LPCTSTR szFilePath, bool bAppend /*=false*/)
 
 	if (bAppend)
 	{
-		printf(">> resuming\n");
+		if (file::DoesFileExist(szFilePath))
+		{
+			printf(">> resuming\n");
+		}
+
 		return true;
 	}
 	

@@ -20,10 +20,14 @@ void git::CreateDB(LPCTSTR szOutputDir, LPCTSTR szWorkingDir, LPCTSTR szEmail)
 	
 	if (!file::DoesFileExist(".git"))
 	{
-		CString sOutputDir = "../Step4_Import.txt";
+		CString sOutputDir = szOutputDir;
+		sOutputDir.Replace("../", "../../"); //workaround
 
 		CString sCommand;
 		sCommand.Format("git init >> %s", sOutputDir);
+		RUN(sCommand);
+
+		sCommand.Format("ECHO. >> %s", sOutputDir);
 		RUN(sCommand);
 
 		git::Commit(szOutputDir, szWorkingDir, "1998-10-01 16:00", "Admin", szEmail, 0);
@@ -38,7 +42,8 @@ void git::Commit(LPCTSTR szOutputDir, LPCTSTR szWorkingDir, LPCTSTR szTime, LPCT
 	GetCurrentDirectory(2000, sOriginalDir.GetBufferSetLength(2000));
 	SetCurrentDirectory(szWorkingDir);
 	
-	CString sOutputDir = "../Step4_Import.txt";
+	CString sOutputDir = szOutputDir;
+	sOutputDir.Replace("../", "../../"); //workaround
 
 	CString sCommand;
 	sCommand.Format("git add -A >> %s", sOutputDir);

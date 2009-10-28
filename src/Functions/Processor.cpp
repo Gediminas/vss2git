@@ -19,6 +19,14 @@ static char THIS_FILE[]=__FILE__;
 #endif
 
 
+static CString m_sFromDate;
+
+inline bool IsFromDate()
+{
+	return !m_sFromDate.IsEmpty();
+}
+
+
 template <class _InputIter, class _Function>
 inline void for_each2(_InputIter __first, _InputIter __last, _Function &__f)
 {
@@ -636,7 +644,7 @@ inline bool CheckExt(const CString &sLine, LPCTSTR szExt)
 
 
 
-static void Initialize(LPCTSTR szTmpDir, LPCTSTR szWorkingDir)
+static void Initialize(LPCTSTR szOutputFile, LPCTSTR szTmpDir, LPCTSTR szWorkingDir)
 {
 	printf("\nINIT");
 	printf("\n>> ");
@@ -655,7 +663,7 @@ static void Initialize(LPCTSTR szTmpDir, LPCTSTR szWorkingDir)
 	RUN(FormatStr("ECHO *.scc>> %s", sGitIgnore));
 	RUN(FormatStr("ECHO *.obj>> %s", sGitIgnore));
 
-	git::CreateDB(config::szInit, szWorkingDir, config::szEmail);
+	git::CreateDB(szOutputFile, szWorkingDir, config::szEmail);
 	vss::init_root_workfolder(szWorkingDir);
 }
 
@@ -852,7 +860,9 @@ static void Step4_Import(LPCTSTR szInputFile, LPCTSTR szOutputFile, LPCTSTR szWo
 		RUN(FormatStr("ECHO Step4 estimated VSS GET    count: %7d >> %s", vect_for_auto_delete.size(), config::szCounters));
 		RUN(FormatStr("ECHO Step4 estimated GIT COMMIT count: %7d >> %s", group_vect.size(),           config::szCounters));
 
-		printf(">> IMPORTING\n");
+		printf("\n");
+		printf(">> IMPORTING      (press ESC to cancel, you can continue later)\n");
+		printf(">>\n");
 		if (!Import(group_vect, szWorkingDir, szOutputFile))
 		{
 			printf(">> IMPORT FAILED\n");
@@ -870,16 +880,43 @@ void processor::Run()
 	CString sOriginalFolder, sVssWorkingDir;
 	GetCurrentDirectory(2000, sOriginalFolder.GetBufferSetLength(2000));
 	
-	Initialize(config::szTmpDir, config::szWorkingDir);
+	if (file::DoesFileExist(config::szFromDate))
+	{
+		CStdioFile fileInput;
+		if (fileInput.Open(config::szFromDate, CFile::modeRead | CFile::shareDenyWrite, NULL))
+		{
+			fileInput.ReadString(m_sFromDate);
+			fileInput.Close();
+
+			if (IsFromDate())
+			{
+				printf("\nWARNING: import from date '%s' !!!\n\n", m_sFromDate);
+			}
+		}
+	}
+
+	printf("Press ENTER to START IMPORT!\n");
+	if (13 != _getch())
+	{
+		exit (1);
+	}
+
+	Initialize(config::szStep0_Init, config::szTmpDir, config::szWorkingDir);
 
 	SetCurrentDirectory(config::szWorkingDir);
 	GetCurrentDirectory(2000, sVssWorkingDir.GetBufferSetLength(2000));
 	SetCurrentDirectory(sOriginalFolder);
 
-	Step1_VssPaths    (config::szStep1_VssDir);
-	Step2_CollectInfo (config::szStep1_VssDir,  config::szStep2_Paths, config::szStep2_SkippedPaths);
-	Step3_GroupInfo   (config::szStep2_Paths,   config::szStep3_Grouped);
-	Step4_Import      (config::szStep3_Grouped, config::szStep4_Import, sVssWorkingDir);
+	const CString sStep1  = IsFromDate() ? config::szStep1_VssDir       : config::szStep1_VssDir;
+	const CString sStep2  = IsFromDate() ? config::szStep2_Paths        : config::szStep2_Paths;
+	const CString sStep2s = IsFromDate() ? config::szStep2_SkippedPaths : config::szStep2_SkippedPaths;
+	const CString sStep3  = IsFromDate() ? config::szStep3_Grouped      : config::szStep3_Grouped;
+	const CString sStep4  = IsFromDate() ? config::szStep4_Import       : config::szStep4_Import;
+
+	Step1_VssPaths    (sStep1);
+	Step2_CollectInfo (sStep1, sStep2, sStep2s);
+	Step3_GroupInfo   (sStep2, sStep3);
+	Step4_Import      (sStep3, sStep4, sVssWorkingDir);
 
 
 	printf("\n>> ");

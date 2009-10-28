@@ -17,12 +17,11 @@ const CString ss_exe = "..\\binSS\\ss.exe";
 
 void vss::init_root_workfolder(LPCTSTR szWorkFolder)
 {
-	printf(">> set root working folder\n");
-
-	RUN(FormatStr(ss_exe + " workfold $/ %s", szWorkFolder));
+	//printf(">> set root working folder\n");
+	//RUN(FormatStr(ss_exe + " workfold $/ %s", szWorkFolder));
 	
-	printf("\n");
-	printf("\n");
+	//printf("\n");
+	//printf("\n");
 
 	printf(">> set active root '$/'\n");
 	RUN(ss_exe + " Project $/");
