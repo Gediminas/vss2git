@@ -63,13 +63,6 @@ void vss::get_file(LPCTSTR szVssFile, int nVssFileVersion, LPCTSTR szWorkingDir,
 	file::CreateDirectoryRecursive(sTo, NULL);
 
 	CString sCommand;
-	
-	//log
 	sCommand.Format(FormatStr("%s Get \"%s\" -V%d -GL\"%s\" >> %s", ss_exe, szVssFile, nVssFileVersion, sTo, szOutputFile));
-
-	//no log
-	//sCommand.Format(FormatStr("%s Get \"%s\" -V%d -GL\"%s\" -O-", ss_exe, szVssFile, nVssFileVersion, sTo));
-
-	//RUN(sCommand);
-	RUN2(sCommand);
+	RUN(sCommand);
 }

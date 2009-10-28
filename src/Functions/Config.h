@@ -3,9 +3,10 @@
 #pragma once
 
 
-namespace paths
+namespace config
 {
 	const LPCTSTR szEmail              = "none@matrix-software.lt";
+	const LPCTSTR szTimeZone           = "+0200";
 
 	const LPCTSTR szTmpDir             = "../tmp";
 	const LPCTSTR szWorkingDir         = "../tmp/Working";

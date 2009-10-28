@@ -18,13 +18,19 @@ int _tmain(int argc, TCHAR* argv[], TCHAR* envp[])
 	RUN("COLOR 0A");
 
 	printf("--------------------------\n");
+	printf("Environment variables must be set\n");
+	printf("eg.:\n");
+	printf(" ssDir  = C:\\VSS\\MyVssDatabaseDir\n");
+	printf(" ssUser = Admin\n");
+	printf(" ssPwd  =\n");
+	printf("\nCurrently set:\n\n");
 	RUN("SET ssDir");
 	RUN("SET ssUser");
 	RUN("SET ssPwd");
-	printf("--------------------------\n");
+	printf("\n--------------------------\n\n");
 
-	//printf("Press any key to start!\n");
-	//getchar();
+	printf("Press ENTER to START IMPORT!\n");
+	getchar();
 
 	processor::Run();
 

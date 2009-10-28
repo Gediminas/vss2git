@@ -4,7 +4,6 @@
 
 
 void RUN(const CString& cmd);
-void RUN2(const CString& cmd);
 
 
 namespace file

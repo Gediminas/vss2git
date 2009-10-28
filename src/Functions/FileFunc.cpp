@@ -8,47 +8,38 @@ static char THIS_FILE[]=__FILE__;
 #define new DEBUG_NEW
 #endif
 
-inline bool RunProgramJono(LPCTSTR szCmdLine, const bool bWaitForExit = true)
-{
-	STARTUPINFO   si;
-	PROCESS_INFORMATION pi;
 
-	ZeroMemory(&si, sizeof(si));
-	si.cb = sizeof(si);
-
-	CString strTotal = szCmdLine;
-
-	const bool bRet = (TRUE == ::CreateProcess(NULL, strTotal.GetBuffer(strTotal.GetLength() + 1), 
-				  NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi));
-
-	if(bWaitForExit)
-	{
-		HANDLE hProc  = pi.hProcess;
-		DWORD dwExitCode = NULL;
-
-		while(::GetExitCodeProcess(hProc, &dwExitCode) && STILL_ACTIVE == dwExitCode)
-			WaitForSingleObject(hProc, 100);
-//			::SleepEx(100, FALSE); // sleep for 0.1 sec for checking again
-	}
-
-	return(bRet);
-}
+//inline bool RunProgramJono(LPCTSTR szCmdLine, const bool bWaitForExit = true)
+//{
+//	STARTUPINFO   si;
+//	PROCESS_INFORMATION pi;
+//
+//	ZeroMemory(&si, sizeof(si));
+//	si.cb = sizeof(si);
+//
+//	CString strTotal = szCmdLine;
+//
+//	const bool bRet = (TRUE == ::CreateProcess(NULL, strTotal.GetBuffer(strTotal.GetLength() + 1), 
+//				  NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi));
+//
+//	if(bWaitForExit)
+//	{
+//		HANDLE hProc  = pi.hProcess;
+//		DWORD dwExitCode = NULL;
+//
+//		while(::GetExitCodeProcess(hProc, &dwExitCode) && STILL_ACTIVE == dwExitCode)
+//			WaitForSingleObject(hProc, 100);
+////			::SleepEx(100, FALSE); // sleep for 0.1 sec for checking again
+//	}
+//
+//	return(bRet);
+//}
 
 
 void RUN(const CString& cmd)
 {
 	system(cmd);
 	//file::RunCommand(cmd);
-}
-
-void RUN2(const CString& cmd)
-{
-//	int n = cmd.Find(" >>");
-//	CString s = (-1 == n) ? cmd : cmd.Left(n);
-
-	system(cmd);
-	//file::RunCommand(s);
-//	RunProgramJono(cmd);
 }
 
 bool file::RunCommand(const CString& cmd, bool bRetrying /*=false*/)

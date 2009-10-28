@@ -19,20 +19,42 @@ static char THIS_FILE[]=__FILE__;
 #endif
 
 
+template <class _InputIter, class _Function>
+inline void for_each2(_InputIter __first, _InputIter __last, _Function &__f)
+{
+  for ( ; __first != __last; ++__first)
+    __f(*__first);
+}
+
+
 
 class CImportGroupData
 {
 public:
-	CImportGroupData(int nCount, LPCTSTR szWorkingDir, LPCTSTR szOutputFile)
-	: m_nCurrentLine(0),
-	  m_nItem(0),
-	  m_nCount(nCount),
-	  m_sWorkingDir(szWorkingDir),
-	  m_sOutputFile(szOutputFile)
+	CImportGroupData()
+	: m_nCurrentLine(-1),
+	  m_nItem(-1),
+	  m_nCount(-1)
 	{
+
+	}
+
+	~CImportGroupData()
+	{
+
+	}
+
+	void Init(int nCount, LPCTSTR szWorkingDir, LPCTSTR szOutputFile)
+	{
+		m_nCurrentLine = 0,
+		m_nItem        = 0,
+		m_nCount       = nCount,
+		m_sWorkingDir  = szWorkingDir;
+		m_sOutputFile  = szOutputFile;
+		
 		m_pFileProgress = new CStdioFile;
 		
-		if (m_pFileProgress->Open(paths::szImportProgress, CFile::modeRead | CFile::shareDenyNone, NULL))
+		if (m_pFileProgress->Open(config::szImportProgress, CFile::modeRead | CFile::shareDenyNone, NULL))
 		{
 			CString sLine;
 			if (m_pFileProgress->ReadString(sLine))
@@ -46,16 +68,11 @@ public:
 			m_pFileProgress->Close();
 		}
 
-		VERIFY(m_pFileProgress->Open(paths::szImportProgress, CFile::modeCreate | CFile::modeWrite | CFile::shareDenyNone, NULL));
+		VERIFY(m_pFileProgress->Open(config::szImportProgress, CFile::modeCreate | CFile::modeWrite | CFile::shareDenyNone, NULL));
 
 		//GetCurrentDirectory(2000, m_sSysWorkingDir.GetBufferSetLength(2000));
-		//SetCurrentDirectory(paths::szWorkingDir);
+		//SetCurrentDirectory(config::szWorkingDir);
 		//GetCurrentDirectory(2000, m_sVssWorkingDir.GetBufferSetLength(2000));
-	}
-
-	~CImportGroupData()
-	{
-
 	}
 
 	void operator () (SGroupData* pGroupData)
@@ -68,12 +85,22 @@ public:
 		}
 		++ m_nCurrentLine;
 
-		printf("\r>> %d%% processing %d of %d ", 100 * m_nCurrentLine / m_nCount, m_nCurrentLine, m_nCount);
+		printf("\r>> %d%%  processing %d/%d  %s  %s          ",
+			100 * m_nCurrentLine / m_nCount,
+			m_nCurrentLine,
+			m_nCount,
+			pGroupData->time,
+			pGroupData->user);
 
-//		//SetCurrentDirectory(m_sSysWorkingDir);
-//		RUN(FormatStr("ECHO ********** >> %s", m_sOutputFile));
-//		RUN(FormatStr("ECHO %s %s >> %s", pGroupData->time, pGroupData->user, m_sOutputFile));
-		//SetCurrentDirectory(m_sVssWorkingDir);
+		//SetCurrentDirectory(m_sSysWorkingDir);
+		RUN(FormatStr("ECHO ************************************************************ >> %s", m_sOutputFile));
+		RUN(FormatStr("ECHO.>> %s", m_sOutputFile));
+		
+		RUN(FormatStr("ECHO Processing %d>> %s", m_nCurrentLine, m_sOutputFile));
+		RUN(FormatStr("ECHO %s  %s>> %s", pGroupData->time, pGroupData->user, m_sOutputFile));
+		
+		RUN(FormatStr("ECHO.>> %s", m_sOutputFile));
+		//RUN(FormatStr("ECHO       *** VSS ***>> %s", m_sOutputFile));
 
 		for (SDataVect::iterator it = pGroupData->data_vect->begin(); pGroupData->data_vect->end() != it; ++ it)
 		{
@@ -90,9 +117,12 @@ public:
 			}
 		}
 
-		git::Commit(m_sOutputFile, m_sWorkingDir, pGroupData->time, pGroupData->user, paths::szEmail, m_nCurrentLine);
-		//printf(FormatStr("Commit %d done...\n", m_nCurrentLine));
-		//getchar();
+		RUN(FormatStr("ECHO.>> %s", m_sOutputFile));
+		//RUN(FormatStr("ECHO       *** GIT ***>> %s", m_sOutputFile));
+
+		git::Commit(m_sOutputFile, m_sWorkingDir, pGroupData->time, pGroupData->user, config::szEmail, m_nCurrentLine);
+		
+		RUN(FormatStr("ECHO.>> %s", m_sOutputFile));
 
 		m_pFileProgress->SetLength(0);
 		m_pFileProgress->WriteString(FormatStr("%d\n", m_nCurrentLine));
@@ -103,12 +133,17 @@ public:
 	{
 		if (INT_MAX == m_nCurrentLine)
 		{
-			printf("\r>> ABORTED                               \n", 100 * m_nCurrentLine / m_nCount, m_nCurrentLine);
+			printf("\n>> ABORTED", 100 * m_nCurrentLine / m_nCount, m_nCurrentLine);
 		}
 		else
 		{
-			printf("\r>> FINISHED                              \n", 100 * m_nCurrentLine / m_nCount, m_nCurrentLine);
+			printf("\r>> FINISHED", 100 * m_nCurrentLine / m_nCount, m_nCurrentLine);
 		}
+
+		printf("                    ");//20
+		printf("                    ");//40
+		printf("                    ");//60
+		printf("\n");
 
 		m_pFileProgress->Close();
 		delete m_pFileProgress;
@@ -142,12 +177,12 @@ static void AddFileVersions(LPCTSTR szFilePath, CStdioFile &output_file)
 		sFilePath.Replace("MatrixKozijnTools", "MatrixKozijn Tools");
 	}
 
-	vss::list_file_versions(sFilePath, paths::szDump);
+	vss::list_file_versions(sFilePath, config::szDump);
 
 	CStdioFile fileDump;
 	CFileException fe;
 
-	if (!fileDump.Open(paths::szDump, CFile::modeRead | CFile::shareDenyWrite, &fe))
+	if (!fileDump.Open(config::szDump, CFile::modeRead | CFile::shareDenyWrite, &fe))
 	{
 		printf(">> dump file error\n");
 		getchar();
@@ -482,7 +517,7 @@ static bool StoreDataVect(const SGroupDataVect &group_vect, LPCTSTR szOutputFile
 	try
 	{
 		CStoreGroupData store(file, group_vect.size());
-		std::for_each(group_vect.begin(), group_vect.end(), store);
+		for_each2(group_vect.begin(), group_vect.end(), store);
 	}
 	catch(CFileException *e)
 	{
@@ -502,7 +537,7 @@ static bool StoreDataVect(const SGroupDataVect &group_vect, LPCTSTR szOutputFile
 static void GroupDataVect(SDataVect &vect, SGroupDataVect &group_vect)
 {
 	CDataVectGrouping group(group_vect);
-	std::for_each(vect.begin(), vect.end(), group);
+	for_each2(vect.begin(), vect.end(), group);
 	group.ValidateLastGroup();
 }
 
@@ -585,8 +620,9 @@ static bool BuildGroupDataVect(SDataVect &vect_for_auto_delete, SGroupDataVect &
 
 static bool Import(SGroupDataVect &group_vect, LPCTSTR szWorkingDir, LPCTSTR szOutputFile)
 {
-	CImportGroupData import(group_vect.size(), szWorkingDir, szOutputFile);
-	std::for_each(group_vect.begin(), group_vect.end(), import);
+	CImportGroupData import;
+	import.Init(group_vect.size(), szWorkingDir, szOutputFile);
+	for_each2(group_vect.begin(), group_vect.end(), import);
 	import.Destroy();
 	return true;
 }
@@ -616,9 +652,10 @@ static void Initialize(LPCTSTR szTmpDir, LPCTSTR szWorkingDir)
 	CString sGitIgnore(szWorkingDir);
 	sGitIgnore += "/.gitignore";
 	::DeleteFile(sGitIgnore);
-	RUN(FormatStr("ECHO *.scc >> %s", sGitIgnore));
+	RUN(FormatStr("ECHO *.scc>> %s", sGitIgnore));
+	RUN(FormatStr("ECHO *.obj>> %s", sGitIgnore));
 
-	git::CreateDB(paths::szInit, szWorkingDir, paths::szEmail);
+	git::CreateDB(config::szInit, szWorkingDir, config::szEmail);
 	vss::init_root_workfolder(szWorkingDir);
 }
 
@@ -739,7 +776,7 @@ static void Step2_CollectInfo(LPCTSTR szInputFile, LPCTSTR szOutputFile, LPCTSTR
 		fileInput.Close();
 		fileOutput.Close();
 		fileSkipped.Close();
-		::DeleteFile(paths::szDump);
+		::DeleteFile(config::szDump);
 		file::MarkJobDone(szOutputFile);
 	}
 };
@@ -753,7 +790,7 @@ static void Step3_GroupInfo(LPCTSTR szInputFile, LPCTSTR szOutputFile)
 
 	if (file::StartJob(szOutputFile))
 	{
-		::DeleteFile(paths::szCounters);
+		::DeleteFile(config::szCounters);
 
 		SDataVect vect;
 		SGroupDataVect group_vect;
@@ -767,7 +804,7 @@ static void Step3_GroupInfo(LPCTSTR szInputFile, LPCTSTR szOutputFile)
 		}
 
 		printf(FormatStr(">> file+version count: %d\n", vect.size()));
-		RUN(FormatStr("ECHO Step3 FILE+VERSION count: %7d >> %s", vect.size(), paths::szCounters));
+		RUN(FormatStr("ECHO Step3 FILE+VERSION count: %7d >> %s", vect.size(), config::szCounters));
 
 		printf(">> sorting vector by date+user\n");
 		std::sort(vect.begin(), vect.end(), data::compare_by_time_user);
@@ -775,8 +812,8 @@ static void Step3_GroupInfo(LPCTSTR szInputFile, LPCTSTR szOutputFile)
 		printf(">> grouping vector by date+user\n");
 		GroupDataVect(vect, group_vect);
 
-		RUN(FormatStr("ECHO Step3 estimated VSS GET    count: %7d >> %s", vect.size(), paths::szCounters));
-		RUN(FormatStr("ECHO Step3 estimated GIT COMMIT count: %7d >> %s", group_vect.size(),           paths::szCounters));
+		RUN(FormatStr("ECHO Step3 estimated VSS GET    count: %7d >> %s", vect.size(), config::szCounters));
+		RUN(FormatStr("ECHO Step3 estimated GIT COMMIT count: %7d >> %s", group_vect.size(),           config::szCounters));
 
 		printf(">> storing data vector\n");
 		if (!StoreDataVect(group_vect, szOutputFile))
@@ -812,8 +849,8 @@ static void Step4_Import(LPCTSTR szInputFile, LPCTSTR szOutputFile, LPCTSTR szWo
 
 		printf(FormatStr(">> estimated VSS GET    count: %7d\n",  vect_for_auto_delete.size()));
 		printf(FormatStr(">> estimated GIT COMMIT count: %7d\n",  group_vect.size()));
-		RUN(FormatStr("ECHO Step4 estimated VSS GET    count: %7d >> %s", vect_for_auto_delete.size(), paths::szCounters));
-		RUN(FormatStr("ECHO Step4 estimated GIT COMMIT count: %7d >> %s", group_vect.size(),           paths::szCounters));
+		RUN(FormatStr("ECHO Step4 estimated VSS GET    count: %7d >> %s", vect_for_auto_delete.size(), config::szCounters));
+		RUN(FormatStr("ECHO Step4 estimated GIT COMMIT count: %7d >> %s", group_vect.size(),           config::szCounters));
 
 		printf(">> IMPORTING\n");
 		if (!Import(group_vect, szWorkingDir, szOutputFile))
@@ -833,16 +870,16 @@ void processor::Run()
 	CString sOriginalFolder, sVssWorkingDir;
 	GetCurrentDirectory(2000, sOriginalFolder.GetBufferSetLength(2000));
 	
-	Initialize(paths::szTmpDir, paths::szWorkingDir);
+	Initialize(config::szTmpDir, config::szWorkingDir);
 
-	SetCurrentDirectory(paths::szWorkingDir);
+	SetCurrentDirectory(config::szWorkingDir);
 	GetCurrentDirectory(2000, sVssWorkingDir.GetBufferSetLength(2000));
 	SetCurrentDirectory(sOriginalFolder);
 
-	Step1_VssPaths    (paths::szStep1_VssDir);
-	Step2_CollectInfo (paths::szStep1_VssDir,  paths::szStep2_Paths, paths::szStep2_SkippedPaths);
-	Step3_GroupInfo   (paths::szStep2_Paths,   paths::szStep3_Grouped);
-	Step4_Import      (paths::szStep3_Grouped, paths::szStep4_Import, sVssWorkingDir);
+	Step1_VssPaths    (config::szStep1_VssDir);
+	Step2_CollectInfo (config::szStep1_VssDir,  config::szStep2_Paths, config::szStep2_SkippedPaths);
+	Step3_GroupInfo   (config::szStep2_Paths,   config::szStep3_Grouped);
+	Step4_Import      (config::szStep3_Grouped, config::szStep4_Import, sVssWorkingDir);
 
 
 	printf("\n>> ");
