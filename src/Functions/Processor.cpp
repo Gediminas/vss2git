@@ -109,6 +109,12 @@ public:
 
 		if (!m_bDBCreated)
 		{
+			CString sGitIgnore(m_sWorkingDir);
+			sGitIgnore += "/.gitignore";
+			::DeleteFile(sGitIgnore);
+			RUN(FormatStr("ECHO *.scc>> %s", sGitIgnore));
+			RUN(FormatStr("ECHO *.obj>> %s", sGitIgnore));
+
 			git::Create(m_sOutputFile, m_sWorkingDir, pGroupData->time, pGroupData->user, config::szEmail);
 
 			m_bDBCreated = true;
@@ -698,8 +704,18 @@ static bool Import(SGroupDataVect &group_vect, LPCTSTR szWorkingDir, LPCTSTR szO
 
 inline bool CheckExt(const CString &sLine, LPCTSTR szExt)
 {
-	return ((sLine.GetLength() - strlen(szExt)) == sLine.Find(szExt));
+	if (sLine.GetLength() < strlen(szExt))
+	{
+		return false;	
+	}
 
+	CString sLineL = sLine;
+	CString sExtnL = szExt;
+	
+	sLineL.MakeLower();
+	sExtnL.MakeLower();
+
+	return ((sLineL.GetLength() - strlen(sExtnL)) == sLineL.Find(sExtnL));
 }
 
 
@@ -716,12 +732,6 @@ static void Initialize(LPCTSTR szTmpDir, LPCTSTR szWorkingDir)
 	::CreateDirectory(szWorkingDir, NULL);
 	file::CreateDirectoryRecursive(szWorkingDir, NULL);
 	printf("\n");
-
-	CString sGitIgnore(szWorkingDir);
-	sGitIgnore += "/.gitignore";
-	::DeleteFile(sGitIgnore);
-	RUN(FormatStr("ECHO *.scc>> %s", sGitIgnore));
-	RUN(FormatStr("ECHO *.obj>> %s", sGitIgnore));
 
 	vss::init_root_workfolder(szWorkingDir);
 }
@@ -775,6 +785,7 @@ static void Step2_CollectInfo(LPCTSTR szInputFile, LPCTSTR szOutputFile, LPCTSTR
 		CString sClearText(' ', 70);
 		sClearText = "\r" + sClearText;
 
+		bool bAdd;
 		CString sLine, sCurrentFolder, sLogDir;
 		int nSkippedFileCount = 0;
 
@@ -820,7 +831,26 @@ static void Step2_CollectInfo(LPCTSTR szInputFile, LPCTSTR szOutputFile, LPCTSTR
 			}
 			else if ('$' != sLine[0])
 			{
-				if (CheckExt(sLine, ".h") || CheckExt(sLine, ".cpp"))
+				bAdd = false;
+				
+				if (CheckExt(sLine, ".cpp"))
+				{
+					bAdd = true;
+				}
+				else if (CheckExt(sLine, ".h"))
+				{
+					if (!CheckExt(sLine, "ResDef.h") &&
+						!CheckExt(sLine, "Resource.h"))
+					{
+						bAdd = true;
+					}
+					else
+					{
+						bAdd = bAdd;
+					}
+				}
+
+				if (bAdd)
 				{
 					ASSERT(-1 == sLine.Find("No items found under $/"));
 					AddFileVersions(sCurrentFolder + "/" + sLine, fileOutput);
