@@ -32,7 +32,7 @@ void vss::init_root_workfolder(LPCTSTR szWorkFolder)
 
 void vss::list_all_files(LPCTSTR szOutputFile)
 {
-	if (!file::StartJob(szOutputFile))
+	if (file::StartJob(szOutputFile))
 	{
 		file::CleanupJob(szOutputFile);
 		
@@ -63,7 +63,12 @@ void vss::get_file(LPCTSTR szVssFile, int nVssFileVersion, LPCTSTR szWorkingDir,
 	file::CreateDirectoryRecursive(sTo, NULL);
 
 	CString sCommand;
-	//sCommand.Format(FormatStr("%s Get \"%s\" -V%d >> %s", ss_exe, szVssFile, nVssFileVersion, szOutputFile));
-	sCommand.Format(FormatStr("%s Get \"%s\" -V%d -GL\"%s\" >> %s", ss_exe, szVssFile, nVssFileVersion, sTo, szOutputFile));
+	
+	//log
+	//sCommand.Format(FormatStr("%s Get \"%s\" -V%d -GL\"%s\" >> %s", ss_exe, szVssFile, nVssFileVersion, sTo, szOutputFile));
+
+	//no log
+	sCommand.Format(FormatStr("%s Get \"%s\" -V%d -GL\"%s\" -O-", ss_exe, szVssFile, nVssFileVersion, sTo));
+
 	system(sCommand);
 }

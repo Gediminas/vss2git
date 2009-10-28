@@ -10,6 +10,7 @@
 //#include "Tools/FileUtil.h"
 //#include "Tools/FileUtilEx.h"
 
+#include <conio.h>
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -67,15 +68,26 @@ public:
 		}
 		++ m_nCurrentLine;
 
-		//SetCurrentDirectory(m_sSysWorkingDir);
-		system(FormatStr("ECHO ********** >> %s", m_sOutputFile));
-		system(FormatStr("ECHO %s %s >> %s", pGroupData->time, pGroupData->user, m_sOutputFile));
+		printf("\r>> %d%% processing %d of %d ", 100 * m_nCurrentLine / m_nCount, m_nCurrentLine, m_nCount);
+
+//		//SetCurrentDirectory(m_sSysWorkingDir);
+//		system(FormatStr("ECHO ********** >> %s", m_sOutputFile));
+//		system(FormatStr("ECHO %s %s >> %s", pGroupData->time, pGroupData->user, m_sOutputFile));
 		//SetCurrentDirectory(m_sVssWorkingDir);
 
 		for (SDataVect::iterator it = pGroupData->data_vect->begin(); pGroupData->data_vect->end() != it; ++ it)
 		{
 			SData *&data = (*it);
 			vss::get_file(data->file, data->version, m_sWorkingDir, m_sOutputFile);
+
+			if (_kbhit())
+			{
+				if (27 == getch())
+				{
+					m_nCurrentLine = INT_MAX;
+					return;
+				}
+			}
 		}
 
 		git::Commit(m_sOutputFile, m_sWorkingDir, pGroupData->time, pGroupData->user, paths::szEmail, m_nCurrentLine);
@@ -85,12 +97,18 @@ public:
 		m_pFileProgress->SetLength(0);
 		m_pFileProgress->WriteString(FormatStr("%d\n", m_nCurrentLine));
 		m_pFileProgress->Flush();
-		printf("\r>> %d%% commit %d", 100 * m_nCurrentLine / m_nCount, m_nCurrentLine);
 	}
 
 	void Destroy()
 	{
-		printf("\r>> FINISHED                  \n", 100 * m_nCurrentLine / m_nCount, m_nCurrentLine);
+		if (INT_MAX == m_nCurrentLine)
+		{
+			printf("\r>> ABORTED                               \n", 100 * m_nCurrentLine / m_nCount, m_nCurrentLine);
+		}
+		else
+		{
+			printf("\r>> FINISHED                              \n", 100 * m_nCurrentLine / m_nCount, m_nCurrentLine);
+		}
 
 		m_pFileProgress->Close();
 		delete m_pFileProgress;
@@ -106,6 +124,7 @@ private:
 	CStdioFile *m_pFileProgress;
 	CString m_sOutputFile;
 	CString m_sWorkingDir;
+
 	//CString m_sSysWorkingDir;
 	//CString m_sVssWorkingDir;
 };
@@ -617,7 +636,7 @@ static void Step2_CollectInfo(LPCTSTR szInputFile, LPCTSTR szOutputFile, LPCTSTR
 	printf("\n>> ");
 	system("TIME/T");
 
-	if (!file::StartJob(szOutputFile))
+	if (file::StartJob(szOutputFile))
 	{
 		::DeleteFile(szOutputSkippedFile);
 
@@ -732,7 +751,7 @@ static void Step3_GroupInfo(LPCTSTR szInputFile, LPCTSTR szOutputFile)
 	printf("\n>> ");
 	system("TIME/T");
 
-	if (!file::StartJob(szOutputFile))
+	if (file::StartJob(szOutputFile))
 	{
 		::DeleteFile(paths::szCounters);
 
@@ -778,7 +797,7 @@ static void Step4_Import(LPCTSTR szInputFile, LPCTSTR szOutputFile, LPCTSTR szWo
 	printf("\n>> ");
 	system("TIME/T");
 
-	if (!file::StartJob(szOutputFile))
+	if (file::StartJob(szOutputFile, true))
 	{
 		SDataVect vect_for_auto_delete;
 		SGroupDataVect group_vect;
@@ -804,7 +823,7 @@ static void Step4_Import(LPCTSTR szInputFile, LPCTSTR szOutputFile, LPCTSTR szWo
 			exit(1);
 		}
 
-		file::MarkJobDone(szOutputFile);
+		//file::MarkJobDone(szOutputFile);
 	}
 };
 

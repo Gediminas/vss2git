@@ -9,6 +9,59 @@ static char THIS_FILE[]=__FILE__;
 #endif
 
 
+bool file::RunCommand(const CString& cmd, bool bRetrying /*=false*/)
+{
+    PROCESS_INFORMATION pi = {0};
+    STARTUPINFO si = {0};
+    si.cb = sizeof(si);
+
+    //numCommands++;
+
+//    if(bDebug)
+//        printf("Running [%s]\n", cmd);
+
+    CString tmp = cmd;
+    if(FALSE == CreateProcess(NULL, tmp.LockBuffer(), NULL, NULL, TRUE, CREATE_SUSPENDED, NULL, NULL, &si, &pi))
+    {
+        printf("Failed to start %s.  LastError=%d\n", cmd, GetLastError());
+        return false;
+    }
+    tmp.UnlockBuffer();
+
+    ResumeThread(pi.hThread);
+    if(WAIT_OBJECT_0 != WaitForSingleObject(pi.hProcess, 300000))
+    {
+        printf("Error waiting for %s to launch and finish--will continue anyway\n", cmd);
+    }
+    DWORD exit = 0;
+    GetExitCodeProcess(pi.hProcess, &exit);
+
+    CloseHandle(pi.hThread);
+    CloseHandle(pi.hProcess);
+
+    if(0 != exit)
+    {
+        printf("Command failed: %s\n", cmd);
+//        if(bRetry && (false == bRetrying))
+//        {
+//            printf("Will auto-retry in 10 seconds...\n");
+//            Sleep(10000);
+//            return RunCommand(cmd, true);
+//        }
+
+		ASSERT(FALSE);
+
+ //       printf("Press Y to try again, or N to fail\n");
+//        char ch = _getch();
+//        if(('Y' == ch) || ('y' == ch))
+//            return RunCommand(cmd, true);
+
+        return false;
+    }
+
+    return true;
+}
+
 //static CString GetBasePath()
 //{
 //	CString sPath;
@@ -116,18 +169,24 @@ bool file::DeleteRecursiveAll(LPCSTR sPath)
 
 
 
-bool file::StartJob(LPCTSTR szFilePath)
+bool file::StartJob(LPCTSTR szFilePath, bool bAppend /*=false*/)
 {
 	printf(">> generating '%s'\n", szFilePath);
+
+	if (bAppend)
+	{
+		printf(">> resuming\n");
+		return true;
+	}
 	
 	if (!file::DoesFileExist(szFilePath) || !file::DoesFileExist(CString(szFilePath) + ".DONE"))
 	{
 		CleanupJob(szFilePath);
-		return false;
+		return true;
 	}
 
 	printf(">> already exist\n");
-	return true;
+	return false;
 }
 
 void file::CleanupJob(LPCTSTR szFilePath)

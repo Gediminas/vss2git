@@ -36,15 +36,19 @@ void git::Commit(LPCTSTR szOutputDir, LPCTSTR szWorkingDir, LPCTSTR szTime, LPCT
 
 	CString sCommand;
 	sCommand.Format("git add -A >> %s", sOutputDir);
+	//sCommand = "git add -A";
 	system(sCommand);
 
-	sCommand.Format("git config --global user.name %s >> %s", szUser, sOutputDir);
+	sCommand.Format("git config user.name %s >> %s", szUser, sOutputDir);
+	//sCommand.Format("git config user.name %s", szUser);
 	system(sCommand);
 
-	sCommand.Format("git config --global user.email %s >> %s", szEmail, sOutputDir);
+	sCommand.Format("git config user.email %s >> %s", szEmail, sOutputDir);
+	//sCommand.Format("git config user.email %s", szEmail);
 	system(sCommand);
 
 	sCommand.Format("git commit -m\"vss2git: %d\" >> %s", nNr, sOutputDir);
+	//sCommand.Format("git commit -m\"vss2git: %d\"", nNr);
 	system(sCommand);
 
 	//sCommand.Format("git commit -m\"vss2git: %d\" >> %s", nNr, sOutputDir);
