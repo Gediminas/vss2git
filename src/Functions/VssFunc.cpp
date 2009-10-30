@@ -2,6 +2,7 @@
 #include "VssFunc.h"
 
 #include "FileFunc.h"
+#include "Config.h"
 
 
 #ifdef _DEBUG
@@ -62,6 +63,14 @@ void vss::get_file(LPCTSTR szVssFile, int nVssFileVersion, LPCTSTR szWorkingDir,
 	file::CreateDirectoryRecursive(sTo, NULL);
 
 	CString sCommand;
-	sCommand.Format(FormatStr("%s Get \"%s\" -V%d -GL\"%s\" >> %s", ss_exe, szVssFile, nVssFileVersion, sTo, szOutputFile));
+
+	sCommand.Format(FormatStr("%s Get \"%s\" -V%d %s -GL\"%s\" >> %s",
+		ss_exe,
+		szVssFile,
+		nVssFileVersion,
+		config::szVssGetQuestionAnswer,
+		sTo,
+		szOutputFile));
+
 	RUN(sCommand);
 }

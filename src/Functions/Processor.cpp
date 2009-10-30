@@ -107,6 +107,8 @@ public:
 			pGroupData->time,
 			pGroupData->user);
 
+		CString sComment;
+
 		if (!m_bDBCreated)
 		{
 			CString sGitIgnore(m_sWorkingDir);
@@ -115,31 +117,46 @@ public:
 			RUN(FormatStr("ECHO *.scc>> %s", sGitIgnore));
 			RUN(FormatStr("ECHO *.obj>> %s", sGitIgnore));
 
-			git::Create(m_sOutputFile, m_sWorkingDir, pGroupData->time, pGroupData->user, config::szEmail);
-
-			m_bDBCreated = true;
-			m_nCommitNr  = m_nCurrentLine;
-
 			if (::IsFromDate())
 			{
 				CString sComment;
 				git::GetLastComment(m_sWorkingDir, sComment);
 
+				const int nCut = sComment.Find(" (updated)");
+
+				if (-1 != nCut)
+				{
+					sComment = sComment.Left(nCut);
+				}
+
 				if (0 == sComment.Find("vss2git: "))
 				{
 					sComment = sComment.Right(sComment.GetLength() - strlen("vss2git: "));
-					m_nCommitNr = atoi(sComment) + 1;
+					m_nCommitNr = atoi(sComment);
 				}
 				else if (0 == sComment.Find("vss2git"))
 				{
 					sComment = sComment.Right(sComment.GetLength() - strlen("vss2git"));
-					m_nCommitNr = atoi(sComment) + 1;
+					m_nCommitNr = atoi(sComment);
+				}
+				else
+				{
+					m_nCommitNr = 0;
 				}
 			}
+
+			sComment.Format("vss2git: %d", 0);
+			git::Create(m_sOutputFile, m_sWorkingDir, pGroupData->time, pGroupData->user, config::szEmail, sComment);
+
+			m_bDBCreated = true;
 		}
-		else
+
+		++ m_nCommitNr;
+		sComment.Format("vss2git: %d", m_nCommitNr);
+
+		if (::IsFromDate())
 		{
-			++ m_nCommitNr;
+			sComment += " (updated)";
 		}
 
 		//SetCurrentDirectory(m_sSysWorkingDir);
@@ -166,7 +183,7 @@ public:
 
 		RUN(FormatStr("ECHO.>> %s", m_sOutputFile));
 
-		git::Commit(m_sOutputFile, m_sWorkingDir, pGroupData->time, pGroupData->user, config::szEmail, m_nCommitNr);
+		git::Commit(m_sOutputFile, m_sWorkingDir, pGroupData->time, pGroupData->user, config::szEmail, sComment);
 		
 		RUN(FormatStr("ECHO.>> %s", m_sOutputFile));
 

@@ -9,6 +9,11 @@ namespace config
 	const LPCTSTR szTimeZone             = "+0200";
 	const LPCTSTR szFromDate             = "../tmp/FromDate.cfg";
 
+	//see vss command line help on -I param
+	//const LPCTSTR szVssGetQuestionAnswer = "";    //User must enter in console Y/N (recomended)
+	const LPCTSTR szVssGetQuestionAnswer = "-I-Y";  //Auto answer Y
+	//const LPCTSTR szVssGetQuestionAnswer = "-I-"; //Auto answer N
+
 	const LPCTSTR szTmpDir               = "../tmp";
 	const LPCTSTR szWorkingDir           = "../tmp/Working";
 	const LPCTSTR szDump                 = "../tmp/dump.txt";
