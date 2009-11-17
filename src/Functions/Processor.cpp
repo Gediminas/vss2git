@@ -195,15 +195,19 @@ public:
 	bool Finnish()
 	{
 		bool bRet = false;
-		if (INT_MAX == m_nCurrentLine)
-		{
-			printf("\n>> ABORTED", 100 * m_nCurrentLine / m_nCount, m_nCurrentLine);
-		}
-		else
-		{
-			printf("\r>> FINISHED", 100 * m_nCurrentLine / m_nCount, m_nCurrentLine);
-			bRet = true;
-		}
+
+        if ( m_nCount > 0 )
+        {
+		    if (INT_MAX == m_nCurrentLine)
+		    {
+			    printf("\n>> ABORTED", 100 * m_nCurrentLine / m_nCount, m_nCurrentLine);
+		    }
+		    else
+		    {
+			    printf("\r>> FINISHED", 100 * m_nCurrentLine / m_nCount, m_nCurrentLine);
+			    bRet = true;
+		    }
+        }
 
 		printf("                    ");//20
 		printf("                    ");//40
