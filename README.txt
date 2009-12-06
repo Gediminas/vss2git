@@ -38,3 +38,18 @@ BEFORE CONVERSION:
        'HH:mm:ss'  (24 hour NO AM/PM symbol!!!)
 
 
+
+--------------------------------------------------------------------------------
+KNOWN BUGS:
+--------------------------------------------------------------------------------
+
+#1: Sometimes file history is lost
+
+    CAUSE:
+      VSS command "ss Dir" gives unexpected output
+      See file bak/D_Step1_VssDir.txt as example, find
+      "AppInit.cpp         Tomas         09.10.28 11:55"
+      Such output is not supported (yet)
+
+
+#2:
