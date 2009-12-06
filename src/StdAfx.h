@@ -12,7 +12,7 @@
 #include <new>
 #include <vector>
 #include <algorithm>
-#include <hash_map>
+//#include <hash_map>
 
 
 #include <afx.h>
