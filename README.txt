@@ -2,10 +2,10 @@
 INFO
 --------------------------------------------------------------------------------
 
-This tool converts Microsoft Visual SourceSafe database to GIT repository
+This console application converts Microsoft Visual SourceSafe database to GIT repository
 
 Simple cycle "ss get" "git commit" is used.
-Commits are grouped by user but spliter by date
+Commits are grouped by user but split by date
 
 
 
@@ -21,7 +21,7 @@ Microsoft Visual C++ 6.0
 BEFORE CONVERSION
 --------------------------------------------------------------------------------
 
-1. enviroment variables should be set
+1. environment variables should be set
    
    To set:
    My Computer -> Properties -> Advanced -> enviroment variables -> User variable... (e.g.):
@@ -82,16 +82,64 @@ Step 4:
   Step4_Import.txt       - import log
                            
                            "ss get"     - used to get VSS file particular version
-                           "git commit" - commit everyting and adjust commit date
+                           "git commit" - commit everything and adjust commit date
 
 
-When particular step is succesfully finished file Step*.txt.DONE is generated.
+When particular step is successfully finished file Step*.txt.DONE is generated.
 Such step will be skipped during next Conversion.
 Delete this file to regenerate data.
 
 
 
 IMPORTED REPOSITORY IS GENERATED IN FOLDER: tmp/Working
+
+
+
+--------------------------------------------------------------------------------
+AFTER CONVERSION
+--------------------------------------------------------------------------------
+
+
+Converted git repository will contain only *.cpp && *.h file. 
+
+You should manually copy (overwrite) all files you need from
+original VSS folder on top of new git repository.
+
+Configure ".gitignore"
+
+And commit.
+
+
+
+--------------------------------------------------------------------------------
+REPOSITORY UPDATE
+--------------------------------------------------------------------------------
+
+
+You can update already imported repository (if VSS database has changed during conversion).
+Or import database from specified date ignoring previous history
+
+Copy  bak/FromDate.cfg --> tmp/FromDate.cfg
+
+Edit stored date in tmp/FromDate.cfg
+
+Run conversion application.
+Warning should be echoed.
+
+
+
+--------------------------------------------------------------------------------
+TROUBLESHOOTING
+--------------------------------------------------------------------------------
+
+
+1. Wrong dates in git repository after/during conversion.
+
+   CAUSE:
+     Not supported system date/time format.
+     See "BEFORE CONVERSION" 3. how to change it or simply select "Lithuanian"
+      in Control Panel -> Regional and Language Options -> Regional Options
+
 
 
 --------------------------------------------------------------------------------
