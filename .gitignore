@@ -12,6 +12,7 @@
 *.map
 *.lib
 *.exe
+*.dll
 *.res
 *.tw
 *.tli
@@ -29,6 +30,14 @@
 *.his
 *.idx
 *.scc
+
 vss*.pdb
 vc*.pdb
+
 /tmp
+
+!bin/vss2git*.exe
+!bin/vss2svn*.exe
+!bin/stlport*.dll
+!bin/stlport*.pdb
+
