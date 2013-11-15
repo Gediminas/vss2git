@@ -2,9 +2,9 @@
 INFO
 --------------------------------------------------------------------------------
 
-This console application converts Microsoft Visual SourceSafe database to GIT repository
+vss2git / vss2svn  application converts Microsoft Visual SourceSafe database to GIT / SVN repository
 
-Simple cycle "ss get" "git commit" is used.
+Simple cycle "ss get" "git/svn commit" is used.
 Commits are grouped by user but split by date
 
 
@@ -15,13 +15,14 @@ COMPILE
 
 Microsoft Visual C++ 6.0
 
+stlport                   (recomended; should work without it)
 
 
 --------------------------------------------------------------------------------
 BEFORE CONVERSION
 --------------------------------------------------------------------------------
 
-1. environment variables should be set
+1. ENVIRONMENT VARIABLES should be set
    
    To set:
    My Computer -> Properties -> Advanced -> enviroment variables -> User variable... (e.g.):
@@ -33,9 +34,9 @@ BEFORE CONVERSION
    Use Microsoft Visual SourceSafe 6.0 -> help -> search for more info
 
 
-2. "tmp" folder should be empty or deleted
+2. "tmp" folder should be EMPTY or DELETED
 
-3. Check your date time format.
+3. Check your DATE-TIME FORMAT.
 
      Control Panel -> Regional and Language Options -> Regional Options -> Customize ->
       Date -> Short date format
@@ -73,7 +74,7 @@ Step 2:
 
 
 Step 3:
-  Step3_Grouped.txt      - data prepared for git commit actions (separated by ****)
+  Step3_Grouped.txt      - data prepared for git/svn commit actions (separated by ****)
                            grouped by user but splitter by date
                            file list contains only last VSS versions to use (intermediate skipped)
 
@@ -81,8 +82,8 @@ Step 3:
 Step 4:
   Step4_Import.txt       - import log
                            
-                           "ss get"     - used to get VSS file particular version
-                           "git commit" - commit everything and adjust commit date
+                           "ss get"         - used to get VSS file particular version
+                           "git/svn commit" - commit everything and adjust commit date
 
 
 When particular step is successfully finished file Step*.txt.DONE is generated.
@@ -91,7 +92,8 @@ Delete this file to regenerate data.
 
 
 
-IMPORTED REPOSITORY IS GENERATED IN FOLDER: tmp/Working
+IMPORTED  GIT  REPOSITORY IS GENERATED TO FOLDER: tmp/Working
+          SVN  REPOSITORY IS GENERATED TO FOLDER: tmp/repo
 
 
 
@@ -100,10 +102,10 @@ AFTER CONVERSION
 --------------------------------------------------------------------------------
 
 
-Converted git repository will contain only *.cpp && *.h file. 
+Converted git/svn repository will contain only *.cpp && *.h file. 
 
 You should manually copy (overwrite) all files you need from
-original VSS folder on top of new git repository.
+original VSS folder on top of new git/svn working copy and commit.
 
 Configure ".gitignore"
 
@@ -133,12 +135,17 @@ TROUBLESHOOTING
 --------------------------------------------------------------------------------
 
 
-1. Wrong dates in git repository after/during conversion.
+1. Wrong dates in git/svn repository after/during conversion.
 
-   CAUSE:
+   FIX:
      Not supported system date/time format.
      See "BEFORE CONVERSION" 3. how to change it or simply select "Lithuanian"
       in Control Panel -> Regional and Language Options -> Regional Options
+
+2. git/svn repository not created and Step4_Import.txt shows no git/svn activity (only vss is shown)
+
+   FIX:
+     git/svn is not installed.
 
 
 

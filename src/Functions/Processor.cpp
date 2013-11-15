@@ -1,14 +1,11 @@
 #include "StdAfx.h"
 #include "Processor.h"
 
-#include "Data.h"
+#include "Dest.h"
 #include "VssFunc.h"
-#include "GitFunc.h"
 #include "FileFunc.h"
 #include "Config.h"
-
-//#include "Tools/FileUtil.h"
-//#include "Tools/FileUtilEx.h"
+#include "Data.h"
 
 #include <conio.h>
 
@@ -111,16 +108,10 @@ public:
 
 		if (!m_bDBCreated)
 		{
-			CString sGitIgnore(m_sWorkingDir);
-			sGitIgnore += "/.gitignore";
-			::DeleteFile(sGitIgnore);
-			RUN(FormatStr("ECHO *.scc>> %s", sGitIgnore));
-			RUN(FormatStr("ECHO *.obj>> %s", sGitIgnore));
-
 			if (::IsFromDate())
 			{
 				CString sComment;
-				git::GetLastComment(m_sWorkingDir, sComment);
+				destination::GetLastComment(m_sWorkingDir, sComment);
 
 				const int nCut = sComment.Find(" (updated)");
 
@@ -129,14 +120,11 @@ public:
 					sComment = sComment.Left(nCut);
 				}
 
-				if (0 == sComment.Find("vss2git: "))
+				CString sPre = FormatStr("%s: ", destination::GetCommentPrefix());
+
+				if (0 == sComment.Find(sPre))
 				{
-					sComment = sComment.Right(sComment.GetLength() - strlen("vss2git: "));
-					m_nCommitNr = atoi(sComment);
-				}
-				else if (0 == sComment.Find("vss2git"))
-				{
-					sComment = sComment.Right(sComment.GetLength() - strlen("vss2git"));
+					sComment = sComment.Right(sComment.GetLength() - strlen(sPre));
 					m_nCommitNr = atoi(sComment);
 				}
 				else
@@ -145,14 +133,14 @@ public:
 				}
 			}
 
-			sComment.Format("vss2git: %d", 0);
-			git::Create(m_sOutputFile, m_sWorkingDir, pGroupData->time, pGroupData->user, config::szEmail, sComment);
+			sComment.Format("%s: %d", destination::GetCommentPrefix(), 0);
+			destination::Create(m_sOutputFile, m_sWorkingDir, pGroupData->time, pGroupData->user, config::szEmail, sComment);
 
 			m_bDBCreated = true;
 		}
 
 		++ m_nCommitNr;
-		sComment.Format("vss2git: %d", m_nCommitNr);
+		sComment.Format("%s: %d", destination::GetCommentPrefix(), m_nCommitNr);
 
 		if (::IsFromDate())
 		{
@@ -183,7 +171,7 @@ public:
 
 		RUN(FormatStr("ECHO.>> %s", m_sOutputFile));
 
-		git::Commit(m_sOutputFile, m_sWorkingDir, pGroupData->time, pGroupData->user, config::szEmail, sComment);
+		destination::Commit(m_sOutputFile, m_sWorkingDir, pGroupData->time, pGroupData->user, config::szEmail, sComment);
 		
 		RUN(FormatStr("ECHO.>> %s", m_sOutputFile));
 
